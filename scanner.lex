@@ -35,17 +35,17 @@ continue return CONTINUE;
 \) return RPAREN;
 \{ return LBRACE;
 \} return RBRACE;
-(<|>|<=|>=) return RELOP;
-(==|!=)  return RELOP_EQ;
-[\+\-] return BINOP;
-[\*\/] return BINOP_MUL_DIV;
+(<|>|<=|>=) {yylval = new Relop(yytext); return RELOP;}
+(==|!=) {yylval = new Relop(yytext); return RELOP_EQ;}
+[\+\-] {yylval = new Binop(yytext); return BINOP;} 
+[\*\/] {yylval = new Binop(yytext); return BINOP_MUL_DIV;}
 \= return ASSIGN;
-([a-zA-Z][a-zA-Z0-9]*) return ID;
-([1-9][0-9]*)|[0] return NUM;
+([a-zA-Z][a-zA-Z0-9]*) {yylval = new Id(yytext); return ID;}
+([1-9][0-9]*)|[0] {yylval = new Num(yytext); return NUM;}
 (\/\/[^\r\n]*[\r|\n|\r\n]?) ;
 {whitespace} ;
 
-(\"([^\n\r\"\\]|\\[rnt\"\\])+\") return STRING;
+(\"([^\n\r\"\\]|\\[rnt\"\\])+\") {yylval = new String (yytext); return STRING;}
 
 . {output::errorLex(yylineno);}
 %%

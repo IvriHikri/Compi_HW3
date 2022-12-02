@@ -1,5 +1,6 @@
 %{
-        #include "output.hpp"
+        #include "hw3_output.hpp"
+        #include "semantic.h"
         #include <iostream>
         #include <stdlib.h>
 
@@ -11,6 +12,9 @@
 	int yyerror(const char * message);
 %}
 
+
+
+#define YYSTYPE Node*
 
 %nonassoc VOID INT BYTE B BOOL
 %left ID NUM STRING
@@ -30,70 +34,75 @@
 
 %%
 
-Program :   Funcs   {printProductionRule(1);}
+Program :   Funcs
 
-Funcs   :/* Epsilon */ {printProductionRule(2);}
-        |FuncDecl Funcs  {printProductionRule(3);}
+Funcs   :/* Epsilon */
+        |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE {printProductionRule(4);}
+FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
 
-RetType :Type  {printProductionRule(5);}
-        |VOID {printProductionRule(6);}
+RetType :Type
+        |VOID 
 
-Formals :/* Epsilon */ {printProductionRule(7);}
-        |FormalsList {printProductionRule(8);}
+Formals :/* Epsilon */ 
+        |FormalsList
 
-FormalsList :FormalDecl {printProductionRule(9);}
-            | FormalDecl COMMA FormalsList {printProductionRule(10);}
+FormalsList :FormalDecl
+            | FormalDecl COMMA FormalsList
 
-FormalDecl  :Type ID {printProductionRule(11);}
+FormalDecl  :Type ID {
+                //Table.insert($1.type, $2.name)
 
-Statements  :Statement {printProductionRule(12);}
-            |Statements Statement {printProductionRule(13);}
+            }
 
-Statement   :LBRACE Statements RBRACE {printProductionRule(14);}
-        |Type ID SC {printProductionRule(15);}
-        |Type ID ASSIGN Exp SC {printProductionRule(16);}
-        |ID ASSIGN Exp SC {printProductionRule(17);}
-        |Call SC {printProductionRule(18);}
-        |RETURN SC {printProductionRule(19);}
-        |RETURN Exp SC {printProductionRule(20);}
-        |IF LPAREN Exp RPAREN Statement {printProductionRule(21);}
-        |IF LPAREN Exp RPAREN Statement ELSE Statement {printProductionRule(22);}
-        |WHILE LPAREN Exp RPAREN Statement {printProductionRule(23);}
-        |BREAK SC {printProductionRule(24);}
-        |CONTINUE SC {printProductionRule(25);}
+Statements  :Statement
+            |Statements Statement
+
+Statement   :LBRACE Statements RBRACE 
+        |Type ID SC 
+        |Type ID ASSIGN Exp SC //int x = hello; calling to function to figure out what is the type of Exp in the symbol table
+        |ID ASSIGN Exp SC
+        |Call SC
+        |RETURN SC
+        |RETURN Exp SC
+        |IF LPAREN Exp RPAREN Statement
+        |IF LPAREN Exp RPAREN Statement ELSE Statement
+        |WHILE LPAREN Exp RPAREN Statement
+        |BREAK SC
+        |CONTINUE SC
                 
-Call    :ID LPAREN ExpList RPAREN {printProductionRule(26);}
-        |ID LPAREN RPAREN {printProductionRule(27);}
+Call    :ID LPAREN ExpList RPAREN
+        |ID LPAREN RPAREN
 
-ExpList :Exp {printProductionRule(28);}
-            |Exp COMMA ExpList {printProductionRule(29);}
+ExpList :Exp
+        |Exp COMMA ExpList
 
-Type    :INT {printProductionRule(30);}
-        |BYTE {printProductionRule(31);}
-        |BOOL {printProductionRule(32);}
+Type    :INT {$$ = new Type("int");}
+        |BYTE {$$ = new Type("byte");}
+        |BOOL {$$ = new Type("bool");}
 
-Exp :LPAREN Exp RPAREN {printProductionRule(33);}
-    |Exp BINOP Exp {printProductionRule(34);}
-    |Exp BINOP_MUL_DIV Exp {printProductionRule(34);}
-    |ID {printProductionRule(35);}
-    |Call {printProductionRule(36);}
-    |NUM {printProductionRule(37);}   
-    |NUM B {printProductionRule(38);}
-    |STRING {printProductionRule(39);}
-    |TRUE {printProductionRule(40);}
-    |FALSE {printProductionRule(41);}
-    |NOT Exp {printProductionRule(42);}
-    |Exp AND Exp {printProductionRule(43);}
-    |Exp OR Exp {printProductionRule(44);}
-    |Exp RELOP Exp {printProductionRule(45);}
-    |Exp RELOP_EQ Exp {printProductionRule(45);}
-    |LPAREN Type RPAREN Exp {printProductionRule(46);}
+Exp :LPAREN Exp RPAREN
+    |Exp Exp IF LPAREN Exp RPAREN ELSE Exp
+    |Exp BINOP Exp
+    |Exp BINOP_MUL_DIV Exp
+    |ID {$$ = new Exp ($1.name);}
+    |Call
+    |NUM 
+    |NUM B
+    |STRING
+    |TRUE
+    |FALSE
+    |NOT Exp {if($2.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp (V_BOOL, $1, $2);}
+    |Exp AND Exp {if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp(V_BOOL, $1, $2, $3);}
+    |Exp OR Exp {if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp(V_BOOL, $1, $2, $3);}
+    |Exp RELOP Exp
+    |Exp RELOP_EQ Exp  
+    |LPAREN Type RPAREN Exp
 %%
 
 int main()
 {
+        Semantic sem = new Semantic();
 	yyparse();
 }
 
