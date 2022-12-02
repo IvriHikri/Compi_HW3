@@ -60,12 +60,16 @@ class Program : public Node
 
 class Exp : public Node
 {
-    string name;
     Var_Type type;
+    bool bool_value;
 
     public:
     Exp(Exp* exp);
     Exp(Exp* e1, Exp* e2, Exp* e3);
+    Exp(Exp* e1, Node* n1, Exp* e2);
+    Exp(Var_Type type, Exp* e1, Node* n1, Exp* e2);
+    Exp(Node* n1, Exp* e1);
+    Exp(Type* t1, Exp* e1);
 
 };
 
@@ -79,11 +83,8 @@ class Id : public Node
 
 class Type : public Node
 {
-    private:
-    string type;
-    
     public:
-    Type(string type): Node("undefined"), type(type){}
+    Var_Type type;
 };
 
 class Num : public Node

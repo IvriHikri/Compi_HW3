@@ -92,11 +92,11 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ($2);}
     |STRING {$$ = new Exp ($1);}
     |TRUE {$$ = new Exp ($1);}
     |FALSE {$$ = new Exp ($1);}
-    |NOT Exp {$$ = new Exp (V_BOOL, $1, $2);}
+    |NOT Exp {$$ = new Exp ($1, $2);}
     |Exp AND Exp {$$ = new Exp(V_BOOL, $1, $2, $3);}
     |Exp OR Exp {$$ = new Exp(V_BOOL, $1, $2, $3);}
-    |Exp RELOP Exp {$$ = new Exp ($1, $2, $3);}
-    |Exp RELOP_EQ Exp {$$ = new Exp ($1, $2, $3);}
+    |Exp RELOP Exp {$$ = new Exp (V_BOOL, $1, $2, $3);}
+    |Exp RELOP_EQ Exp {$$ = new Exp (V_BOOL, $1, $2, $3);}
     |LPAREN Type RPAREN Exp {$$ = new Exp ($2, $4);} 
 %%
 
