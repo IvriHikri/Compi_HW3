@@ -12,7 +12,7 @@
 	int yyerror(const char * message);
 %}
 
-
+//add to lexer in each token a constructor of Node.
 
 #define YYSTYPE Node*
 
@@ -81,23 +81,23 @@ Type    :INT {$$ = new Type("int");}
         |BYTE {$$ = new Type("byte");}
         |BOOL {$$ = new Type("bool");}
 
-Exp :LPAREN Exp RPAREN
-    |Exp Exp IF LPAREN Exp RPAREN ELSE Exp
-    |Exp BINOP Exp
-    |Exp BINOP_MUL_DIV Exp
-    |ID {$$ = new Exp ($1.name);}
-    |Call
-    |NUM 
-    |NUM B
-    |STRING
-    |TRUE
-    |FALSE
-    |NOT Exp {if($2.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp (V_BOOL, $1, $2);}
-    |Exp AND Exp {if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp(V_BOOL, $1, $2, $3);}
-    |Exp OR Exp {if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno); $$ = new Exp(V_BOOL, $1, $2, $3);}
-    |Exp RELOP Exp
-    |Exp RELOP_EQ Exp  
-    |LPAREN Type RPAREN Exp
+Exp :LPAREN Exp RPAREN {$$ = new Exp ($2);}
+    |Exp IF LPAREN Exp RPAREN ELSE Exp {$$ = new Exp ($1, $4, $7);}
+    |Exp BINOP Exp {$$ = new Exp ($1, $2, $3);}
+    |Exp BINOP_MUL_DIV Exp {$$ = new Exp ($1, $2, $3);}
+    |ID {$$ = new Exp ($1);}
+    |Call {$$ = new Exp ($1);}
+    |NUM {$$ = new Exp ($1);}
+    |NUM B {$$ = new Exp ($1);}
+    |STRING {$$ = new Exp ($1);}
+    |TRUE {$$ = new Exp ($1);}
+    |FALSE {$$ = new Exp ($1);}
+    |NOT Exp {$$ = new Exp (V_BOOL, $1, $2);}
+    |Exp AND Exp {$$ = new Exp(V_BOOL, $1, $2, $3);}
+    |Exp OR Exp {$$ = new Exp(V_BOOL, $1, $2, $3);}
+    |Exp RELOP Exp {$$ = new Exp ($1, $2, $3);}
+    |Exp RELOP_EQ Exp {$$ = new Exp ($1, $2, $3);}
+    |LPAREN Type RPAREN Exp {$$ = new Exp ($2, $4);} 
 %%
 
 int main()

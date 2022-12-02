@@ -12,7 +12,6 @@
 whitespace ([\t\n\r ])
 
 %%
-
 void return VOID;
 int return INT;
 byte return BYTE;
