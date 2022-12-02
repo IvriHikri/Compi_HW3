@@ -2,6 +2,34 @@
 #include "hw3_output.hpp"
 
 using namespace output;
+
+Type::Type(Var_Type v_type)
+{
+    this->type = v_type;
+    switch(v_type){
+     case(V_INT):
+     {
+        this->value = "int";
+        break;
+     }
+     case(V_BYTE):
+     {
+        this->value = "byte";
+        break;
+     }
+
+     case(V_BOOL):
+     {
+        this->value = "bool";
+        break;
+     }
+     default:
+     {
+        //error.
+     }
+    }
+}
+
 Exp::Exp(Exp* exp): Node(exp->value)
 {
     this->type = exp->type;
@@ -123,4 +151,37 @@ Exp::Exp(Type* t1, Exp* e1)
     }
     this->type = t1->type;
     this->value = e1->value;
+}
+
+Exp::Exp(Call* c)
+{
+    //TODO- fill this after we figure out what call is...
+}
+
+Exp::Exp(Node* n)
+{
+    this->value = n->value;
+    if(n->value.compare("true") == 0)
+    {
+        this->bool_value = true;
+        this->type = V_BOOL;
+    }
+    else if (n->value.compare("false") == 0)
+    {
+        this->bool_value = false;
+        this->type = V_BOOL;
+    }
+
+    else if(n->value.compare("num") == 0)
+        this->type = V_INT;
+    
+}
+
+Exp::Exp(Node* n1, Node* n2)
+{
+    if(n1->value.compare("num") != 0 || n2->value.compare("b") != 0)
+        return; //errorrrrr shouldnt get here..
+    this->type = V_BYTE;
+    this->value = n1->value;
+
 }

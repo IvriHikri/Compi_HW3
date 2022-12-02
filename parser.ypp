@@ -77,9 +77,9 @@ Call    :ID LPAREN ExpList RPAREN
 ExpList :Exp
         |Exp COMMA ExpList
 
-Type    :INT {$$ = new Type("int");}
-        |BYTE {$$ = new Type("byte");}
-        |BOOL {$$ = new Type("bool");}
+Type    :INT {$$ = new Type(V_INT);}
+        |BYTE {$$ = new Type(V_BYTE);}
+        |BOOL {$$ = new Type(V_BOOL);}
 
 Exp :LPAREN Exp RPAREN {$$ = new Exp ($2);}
     |Exp IF LPAREN Exp RPAREN ELSE Exp {$$ = new Exp ($1, $4, $7);}

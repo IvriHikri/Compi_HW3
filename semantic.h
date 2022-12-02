@@ -58,6 +58,11 @@ class Program : public Node
 {
 };
 
+class Call : public Node
+{
+
+};
+
 class Exp : public Node
 {
     Var_Type type;
@@ -70,6 +75,9 @@ class Exp : public Node
     Exp(Var_Type type, Exp* e1, Node* n1, Exp* e2);
     Exp(Node* n1, Exp* e1);
     Exp(Type* t1, Exp* e1);
+    Exp(Call* c);
+    Exp(Node* n);
+    Exp(Node* n1, Node* n2)
 
 };
 
@@ -85,6 +93,7 @@ class Type : public Node
 {
     public:
     Var_Type type;
+    Type(Var_Type v_type);
 };
 
 class Num : public Node
