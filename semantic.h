@@ -6,8 +6,10 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <stack>
 
 using std::list;
+using std::stack;
 using std::string;
 using std::vector;
 
@@ -49,17 +51,21 @@ public:
 
 class Semantic
 {
-    list<Table> symbolTables;
-    list<int> offset;
-
 public:
+    list<Table> symbolTables;
+    stack<int> offset;
+    static bool in_while;
+
     Semantic();
     ~Semantic() = default;
 
     void openScope();
     void addSymbol(Node *symbol);
-    void addFunc();
+    void addFunc(Node *symbol);
     void closeScope();
+    bool isExist(string id);
+    static bool start_while();
+    static bool finish_while();
 };
 
 #endif /*SEMANTIC_H*/

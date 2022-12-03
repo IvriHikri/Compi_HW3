@@ -1,6 +1,7 @@
 %{
 
-#include "output.hpp"
+#include "classes.h"
+#include "hw3_output.hpp"
 #include "parser.tab.hpp"
 #include <iostream>
 #include <stdlib.h>
@@ -39,8 +40,8 @@ continue {yylval = new Node(yytext); return CONTINUE;}
 [\+\-] {yylval = new Node(yytext); return BINOP;} 
 [\*\/] {yylval = new Node(yytext); return BINOP_MUL_DIV;}
 \= return ASSIGN;
-([a-zA-Z][a-zA-Z0-9]*) {yylval = new Id(yytext); return ID;}
-([1-9][0-9]*)|[0] {yylval = new Num(yytext); return NUM;}
+([a-zA-Z][a-zA-Z0-9]*) {yylval = new Node(yytext); return ID;}
+([1-9][0-9]*)|[0] {yylval = new Node(yytext); return NUM;}
 (\/\/[^\r\n]*[\r|\n|\r\n]?) ;
 {whitespace} ;
 

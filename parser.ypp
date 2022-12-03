@@ -59,18 +59,18 @@ Statements  :Statement
             |Statements Statement
 
 Statement   :LBRACE Statements RBRACE 
-        |Type ID SC 
-        |Type ID ASSIGN Exp SC //int x = hello; calling to function to figure out what is the type of Exp in the symbol table
-        |ID ASSIGN Exp SC
-        |Call SC
-        |RETURN SC
-        |RETURN Exp SC
-        |IF LPAREN Exp RPAREN Statement
-        |IF LPAREN Exp RPAREN Statement ELSE Statement
-        |WHILE LPAREN Exp RPAREN Statement
+        |Type ID SC {$$ = new Statement($1,$2);}
+        |Type ID ASSIGN Exp SC {$$ = new Statement($1,$2,$4);}
+        |ID ASSIGN Exp SC {$$ = new Statement($1,$3);}
+        |Call SC {$$ = new Statement($1);}
+        |RETURN SC {$$ = new Statement($1);}
+        |RETURN Exp SC {$$ = new Statement($1,$2);}
+        |IF LPAREN Exp RPAREN Statement {$$ = new Statement($1,$3,$5);}
+        |IF LPAREN Exp RPAREN Statement ELSE Statement {$$ = new Statement($3,$5,$7);}
+        |WHILE WHILE_M LPAREN Exp RPAREN Statement {$$ = new Statement($1,$4,$6);}
         |BREAK SC
         |CONTINUE SC
-                
+WHILE_M : /*epsilon*/ {Semantic::start_while();}
 Call    :ID LPAREN ExpList RPAREN
         |ID LPAREN RPAREN //dealing with symbol table, need to see the value of ID, then check in the symbol table what is the return type of the function named id->value
 
