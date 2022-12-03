@@ -51,6 +51,7 @@ Exp::Exp(Exp* e1, Exp* e2, Exp* e3)
 {
     if(e2->type != V_BOOL)
     {
+        //TODO- add here a check if e1 and e3 are in the same type or we can cast them..
         errorMismatch(yylineno);
     }
     Exp* temp = (e2->value.compare("True") == 0)? e1 : e3;
