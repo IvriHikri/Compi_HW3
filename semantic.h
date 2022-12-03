@@ -2,104 +2,64 @@
 #define SEMANTIC_H
 
 #include "hw3_output.hpp"
+#include "classes.h"
 #include <vector>
 #include <string>
-#include <stack>
+#include <list>
 
-using std::stack;
+using std::list;
 using std::string;
 using std::vector;
-extern int yylineno;
-
-enum Var_Type {V_INT, V_VOID, V_BOOL, V_BYTE, V_STRING, UNDEFINED};
-class Node;
-#define YYSTYPE Node*
-
-//if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno);
-
-class Node
-{
-   public:
-   string value;
-   Var_Type type;
-
-   Node();
-   Node (string token_name) : value(token_name){}
-};
 
 class TableEntry
 {
     string name;
-    vector<string> types;
+    vector<Var_Type> types;
     int offset;
+
+public:
+    TableEntry();
+    TableEntry(string &name, vector<Var_Type> &types, int offset)
+    {
+        this->name = name;
+        this->types = types;
+        this->offset = offset;
+    }
+
+    string &getName() { return this->name; }
+    vector<Var_Type> &getTypes() { return this->types; }
+    int getOffset() { return this->offset; }
 };
 
 class Table
 {
     vector<TableEntry> symbols;
+
+public:
+    Table()
+    {
+        symbols = vector<TableEntry>();
+    }
+
+    vector<TableEntry> &getEntries()
+    {
+        return this->symbols;
+    }
 };
 
 class Semantic
 {
-    stack<Table> symbolTables;
-    stack<int> offset;
+    list<Table> symbolTables;
+    list<int> offset;
 
-    public:
-    Semantic()
-    {
-        symbolTables = stack<Table>();
-        offset = stack<int>();
-    }
-
+public:
+    Semantic();
     ~Semantic() = default;
-};
 
-/***********************************************************************************************/
-
-class Program : public Node
-{
-};
-
-class Call : public Node
-{
-
-};
-
-class Exp : public Node
-{
-    bool bool_value;
-
-    public:
-    Exp(Exp* exp);
-    Exp(Exp* e1, Exp* e2, Exp* e3);
-    Exp(Exp* e1, Node* n1, Exp* e2);
-    Exp(Var_Type type, Exp* e1, Node* n1, Exp* e2);
-    Exp(Node* n1, Exp* e1);
-    Exp(Type* t1, Exp* e1);
-    Exp(Call* c);
-    Exp(Node* n);
-    Exp(Node* n1, Node* n2);
-
-};
-
-class Id : public Node
-{
-    string name;
-
-    public:
-    Id(string txt): Node("ID"), name(txt){}
-};
-
-class Type : public Node
-{
-    public:
-    Type(Type* t1);
-    Type(Var_Type v_type);
-};
-
-class Num : public Node
-{
-    int value;
+    void openScope();
+    void addSymbol(Node *symbol);
+    void addFunc();
+    void closeScope();
 };
 
 #endif /*SEMANTIC_H*/

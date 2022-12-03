@@ -103,7 +103,7 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ($2);}
 int main()
 {
         Semantic sem = new Semantic();
-	yyparse();
+        yyparse();
 }
 
 int yyerror(const char * message)
