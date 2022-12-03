@@ -12,8 +12,6 @@
 	int yyerror(const char * message);
 %}
 
-//add to lexer in each token a constructor of Node.
-
 #define YYSTYPE Node*
 
 %nonassoc VOID INT BYTE B BOOL
@@ -39,26 +37,23 @@ Program :   Funcs
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
+FuncDecl:RetType ID LPAREN Formals RPAREN {Semantic::declare_func($1, $2, $4);} LBRACE OPEN_SCOPE Statements RBRACE {Semantic::closeScope();}  
 
 RetType :Type {$$ = new Type($1);}
         |VOID {$$ = new Type(V_VOID);}
+ 
+Formals :/* Epsilon */ {$$ = new Formals();}
+        |FormalsList {$$ = new Formals($1);}
 
-Formals :/* Epsilon */ 
-        |FormalsList
+FormalsList : FormalDecl {$$ = new FormalsList($1);} 
+            | FormalDecl COMMA FormalsList {$$ = new FormalsList($1, $3);}
 
-FormalsList :FormalDecl
-            | FormalDecl COMMA FormalsList
-
-FormalDecl  :Type ID {
-                //Table.insert($1.type, $2.name)
-
-            }
+FormalDecl  :Type ID {$$ = new FormalDecl($1, $2);}
 
 Statements  :Statement
             |Statements Statement
 
-Statement   :LBRACE Statements RBRACE 
+Statement   :LBRACE OPEN_SCOPE Statements RBRACE {Semantic::closeScope();}
         |Type ID SC {$$ = new Statement($1,$2);}
         |Type ID ASSIGN Exp SC {$$ = new Statement($1,$2,$4);}
         |ID ASSIGN Exp SC {$$ = new Statement($1,$3);}
@@ -68,9 +63,11 @@ Statement   :LBRACE Statements RBRACE
         |IF LPAREN Exp RPAREN Statement {$$ = new Statement($1,$3,$5);}
         |IF LPAREN Exp RPAREN Statement ELSE Statement {$$ = new Statement($3,$5,$7);}
         |WHILE WHILE_M LPAREN Exp RPAREN Statement {$$ = new Statement($1,$4,$6);}
-        |BREAK SC
-        |CONTINUE SC
+        |BREAK SC {$$ = new Statement($1);}
+        |CONTINUE SC {$$ = new Statement($1);}
+
 WHILE_M : /*epsilon*/ {Semantic::start_while();}
+
 Call    :ID LPAREN ExpList RPAREN
         |ID LPAREN RPAREN //dealing with symbol table, need to see the value of ID, then check in the symbol table what is the return type of the function named id->value
 
@@ -98,6 +95,9 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ($2);}
     |Exp RELOP Exp {$$ = new Exp (V_BOOL, $1, $2, $3);}
     |Exp RELOP_EQ Exp {$$ = new Exp (V_BOOL, $1, $2, $3);}
     |LPAREN Type RPAREN Exp {$$ = new Exp ($2, $4);} 
+
+
+OPEN_SCOPE : /*epsilon */ {sem->openScope();}
 %%
 
 int main()

@@ -17,20 +17,26 @@ class TableEntry
 {
     string name;
     vector<Var_Type> types;
+    string value;
     int offset;
+    bool isFunc;
 
 public:
     TableEntry();
-    TableEntry(string &name, vector<Var_Type> &types, int offset)
+    TableEntry(string &name, vector<Var_Type> &types, string &value, int offset, bool isFunc)
     {
         this->name = name;
         this->types = types;
+        this->value = value;
         this->offset = offset;
+        this->isFunc = isFunc;
     }
 
     string &getName() { return this->name; }
     vector<Var_Type> &getTypes() { return this->types; }
     int getOffset() { return this->offset; }
+    string &getValue() { return this->value; }
+    void setValue(string value) { this->value = value; }
 };
 
 class Table
@@ -59,13 +65,16 @@ public:
     Semantic();
     ~Semantic() = default;
 
-    void openScope();
-    void addSymbol(Node *symbol);
-    void addFunc(Node *symbol);
-    void closeScope();
+    void addSymbol(Node *symbol, string &value);
+    void addFunc(Func *func);
     bool isExist(string id);
+    TableEntry *getTableEntry(string id);
+    void openScope();
+    void closeScope();
     static bool start_while();
     static bool finish_while();
 };
+
+Semantic *sem = new Semantic();
 
 #endif /*SEMANTIC_H*/

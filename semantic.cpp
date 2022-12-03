@@ -14,23 +14,26 @@ void Semantic::openScope()
     offset.push(offset.top());
 }
 
-void Semantic::addSymbol(Node *symbol)
+void Semantic::addSymbol(Node *symbol, string &value)
 {
-    if(isExist(symbol->value))
+    if (isExist(symbol->value))
     {
         errorDef(yylineno, symbol->value);
     }
 
-    this->symbolTables.back().getEntries().emplace_back(TableEntry(symbol->value, vector<Var_Type>(1, symbol->type), this->offset.top()));
-    this->offset.top() ++;
+    this->symbolTables.back().getEntries().emplace_back(TableEntry(symbol->value, vector<Var_Type>(1, symbol->type), value, this->offset.top(),false));
+    this->offset.top()++;
 }
 
-void Semantic::addFunc(Node *symbol)
+void Semantic::addFunc(Func *func)
 {
-    if(isExist(symbol->value))
+    if (isExist(func->value))
     {
-
+        errorDef(yylineno, func->value);
     }
+
+    string emptyString = "";
+    // this->symbolTables.back().getEntries().emplace_back(TableEntry(func->value,func->vec,emptyString, 0, true));
 }
 
 void Semantic::closeScope()
@@ -51,6 +54,23 @@ bool Semantic::isExist(string id)
             }
         }
     }
+    return false;
+}
+
+TableEntry *Semantic::getTableEntry(string id)
+{
+    for (Table t : symbolTables)
+    {
+        for (TableEntry ent : t.getEntries())
+        {
+            if (ent.getName().compare(id) == 0)
+            {
+                return &ent;
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 bool Semantic::start_while()
