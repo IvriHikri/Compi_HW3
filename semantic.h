@@ -21,6 +21,8 @@ class Node
 {
    public:
    string value;
+   Var_Type type;
+
    Node();
    Node (string token_name) : value(token_name){}
 };
@@ -65,7 +67,6 @@ class Call : public Node
 
 class Exp : public Node
 {
-    Var_Type type;
     bool bool_value;
 
     public:
@@ -77,7 +78,7 @@ class Exp : public Node
     Exp(Type* t1, Exp* e1);
     Exp(Call* c);
     Exp(Node* n);
-    Exp(Node* n1, Node* n2)
+    Exp(Node* n1, Node* n2);
 
 };
 
@@ -92,7 +93,7 @@ class Id : public Node
 class Type : public Node
 {
     public:
-    Var_Type type;
+    Type(Type* t1);
     Type(Var_Type v_type);
 };
 

@@ -3,9 +3,14 @@
 
 using namespace output;
 
+Type::Type(Type* t1)
+{
+    this->type = t1->type;
+    this->value = value;
+}
+
 Type::Type(Var_Type v_type)
 {
-    this->type = v_type;
     switch(v_type){
      case(V_INT):
      {
@@ -23,11 +28,18 @@ Type::Type(Var_Type v_type)
         this->value = "bool";
         break;
      }
+
+     case(V_VOID):
+    {
+        this->value = "void";
+        break;
+    }
      default:
      {
         //error.
      }
     }
+    this->type = v_type;
 }
 
 Exp::Exp(Exp* exp): Node(exp->value)
@@ -171,10 +183,10 @@ Exp::Exp(Node* n)
         this->bool_value = false;
         this->type = V_BOOL;
     }
-
     else if(n->value.compare("num") == 0)
         this->type = V_INT;
-    
+    else if(n->value.compare("string") == 0)
+        this->type = V_STRING;
 }
 
 Exp::Exp(Node* n1, Node* n2)

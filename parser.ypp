@@ -41,8 +41,8 @@ Funcs   :/* Epsilon */
 
 FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE
 
-RetType :Type
-        |VOID 
+RetType :Type {$$ = new Type($1);}
+        |VOID {$$ = new Type(V_VOID);}
 
 Formals :/* Epsilon */ 
         |FormalsList
@@ -72,7 +72,7 @@ Statement   :LBRACE Statements RBRACE
         |CONTINUE SC
                 
 Call    :ID LPAREN ExpList RPAREN
-        |ID LPAREN RPAREN
+        |ID LPAREN RPAREN //dealing with symbol table, need to see the value of ID, then check in the symbol table what is the return type of the function named id->value
 
 ExpList :Exp
         |Exp COMMA ExpList
