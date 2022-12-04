@@ -71,6 +71,7 @@ public:
     TableEntry *getTableEntry(string id);
     void openScope();
     void closeScope();
+    bool checkReturnType(Exp *e = nullptr);
     static bool start_while();
     static bool finish_while();
 };

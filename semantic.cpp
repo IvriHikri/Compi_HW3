@@ -71,7 +71,7 @@ TableEntry *Semantic::getTableEntry(string id)
     }
 
     return nullptr;
-}
+} 
 
 bool Semantic::start_while()
 {
