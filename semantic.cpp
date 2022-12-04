@@ -82,3 +82,24 @@ bool Semantic::finish_while()
 {
     in_while = false;
 }
+
+void Semantic::declareFunction(Type* type, Node* id, Formals* formals)
+{
+    if(isExist(id->value))
+        errorDef(yylineno, id->value);
+    vector<Var_Type> var_types;
+    for(FormalDecl* f : formals->declaration)
+    {
+        if(isExist(f->value))
+            errorDef(yylineno, f->value);
+        var_types.push_back(f->type);
+    }
+
+    this->symbolTables.back().getEntries().emplace_back(TableEntry(id->value, var_types, id->value, 0, true));
+    int i = -1;
+    for(FormalDecl* f : formals->declaration)
+    {
+        this->symbolTables.back().getEntries().emplace_back(TableEntry(f->value, vector<Var_Type>(1, f->type), f->value, i, false));
+        i--;
+    }
+}

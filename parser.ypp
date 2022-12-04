@@ -37,7 +37,7 @@ Program :   Funcs
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN {Semantic::declare_func($1, $2, $4);} LBRACE OPEN_SCOPE Statements RBRACE {Semantic::closeScope();}  
+FuncDecl:RetType ID LPAREN Formals RPAREN {sem.declareFunction($1, $2, $4);} LBRACE OPEN_SCOPE Statements RBRACE {sem.closeScope();}  
 
 RetType :Type {$$ = new Type($1);}
         |VOID {$$ = new Type(V_VOID);}

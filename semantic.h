@@ -37,6 +37,7 @@ public:
     int getOffset() { return this->offset; }
     string &getValue() { return this->value; }
     void setValue(string value) { this->value = value; }
+
 };
 
 class Table
@@ -74,6 +75,7 @@ public:
     bool checkReturnType(Exp *e = nullptr);
     static bool start_while();
     static bool finish_while();
+    void declareFunction(Type* type, Node* id, Formals* formals);
 };
 
 Semantic *sem = new Semantic();
