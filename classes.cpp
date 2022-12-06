@@ -1,29 +1,6 @@
 #include "classes.h"
 #include "semantic.h"
 
-vector<string> &convertToStringVector(vector<Var_Type> vec)
-{
-    vector<string> new_vec = vector<string>();
-    for (Var_Type t : vec)
-    {
-        switch (t)
-        {
-        case V_INT:
-            new_vec.push_back("int");
-            break;
-        case V_BYTE:
-            new_vec.push_back("byte");
-            break;
-        case V_BOOL:
-            new_vec.push_back("bool");
-            break;
-        case V_STRING:
-            new_vec.push_back("string");
-            break;
-        }
-    }
-}
-
 /****************************************   TYPE   ****************************************/
 
 Type::Type(Type *t)
@@ -58,10 +35,6 @@ Type::Type(Var_Type v_type)
         this->value = "void";
         break;
     }
-    default:
-    {
-        // error.
-    }
     }
     this->type = v_type;
 }
@@ -86,21 +59,31 @@ Statement::Statement(Type *t, Node *symbol, Exp *exp)
     sem->addSymbol(symbol, exp->value);
 }
 
-// ID = Exp;
+// ID = Exp; OR return Exp;
 Statement::Statement(Node *symbol, Exp *exp)
 {
-    TableEntry *ent = sem->getTableEntry(symbol->value);
-    if (ent == nullptr)
+    if (symbol->value.compare("return") == 0)
     {
-        errorUndef(yylineno, symbol->value);
+        if (!sem->checkReturnType(exp->type))
+        {
+            errorMismatch(yylineno);
+        }
     }
-
-    if (ent->getTypes()[0] != exp->type && !(ent->getTypes()[0] == V_INT && exp->type == V_BYTE))
+    else
     {
-        errorMismatch(yylineno);
-    }
+        TableEntry *ent = sem->getTableEntry(symbol->value);
+        if (ent == nullptr || ent->getIsFunc())
+        {
+            errorUndef(yylineno, symbol->value);
+        }
 
-    ent->setValue(exp->value);
+        if (ent->getReturnValue() != exp->type && !(ent->getReturnValue() == V_INT && exp->type == V_BYTE))
+        {
+            errorMismatch(yylineno);
+        }
+
+        ent->setValue(exp->value);
+    }
 }
 
 // Call
@@ -149,15 +132,21 @@ Statement::Statement(Exp *exp, Statement *s1, Statement *s2)
 // BREAK / CONTINUE
 Statement::Statement(Node *symbol)
 {
-    if (symbol->value.compare("break") == 0)
+    if (symbol->value.compare("return") == 0)
+    {
+        if (!sem->checkReturnType(V_VOID))
+        {
+            errorMismatch(yylineno);
+        }
+    }
+    else if (symbol->value.compare("break") == 0)
     {
         if (!sem->in_while)
         {
             errorUnexpectedBreak(yylineno);
         }
     }
-
-    if (symbol->value.compare("continue") == 0)
+    else if (symbol->value.compare("continue") == 0)
     {
         if (!sem->in_while)
         {
@@ -171,31 +160,33 @@ Statement::Statement(Node *symbol)
 
 /****************************************   CALL   ****************************************/
 
-Call::Call(Node *n)
+Call::Call(Node *symbol)
 {
-    TableEntry *ent = sem->getTableEntry(n->value);
+    TableEntry *ent = sem->getTableEntry(symbol->value);
     if (ent == nullptr || !ent->getIsFunc())
     {
-        errorUndefFunc(yylineno, n->value);
+        errorUndefFunc(yylineno, symbol->value);
     }
 
     if (!ent->getTypes().empty())
     {
-        errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+        errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
     }
+
+    sem->setCurrentFunction(symbol->value);
 }
 
-Call::Call(Node *n, Explist *exp_list)
+Call::Call(Node *symbol, Explist *exp_list)
 {
-    TableEntry *ent = sem->getTableEntry(n->value);
+    TableEntry *ent = sem->getTableEntry(symbol->value);
     if (ent == nullptr || !ent->getIsFunc())
     {
-        errorUndefFunc(yylineno, n->value);
+        errorUndefFunc(yylineno, symbol->value);
     }
 
     if (ent->getTypes().size() != exp_list->getExpTypes().size())
     {
-        errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+        errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
     }
 
     int index = 0;
@@ -204,15 +195,24 @@ Call::Call(Node *n, Explist *exp_list)
     {
         if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))
         {
-            errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+            errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
         }
         index++;
     }
+
+    sem->setCurrentFunction(symbol->value);
 }
 
 /****************************************   EXP_LIST   ****************************************/
 Explist::Explist(Exp *exp)
 {
+    this->exp_list.insert(this->exp_list.begin(), exp);
+}
+
+Explist::Explist(Exp *exp, Explist *exp_list)
+{
+    this->exp_list = vector<Exp *>(exp_list->exp_list);
+    this->exp_list.insert(this->exp_list.begin(), exp);
 }
 
 /****************************************   EXP   ****************************************/
@@ -276,7 +276,7 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
 // Boolean Expression
 Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
 {
-    this->value = "this is boolean expression";
+    this->value = "boolean expression";
     this->type = V_BOOL;
     if (e1->type == V_BOOL || e2->type == V_BOOL)
     {
@@ -291,7 +291,6 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
             // error, TODO
         }
     }
-
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
         if (n1->value.compare("<") == 0)
@@ -343,7 +342,7 @@ Exp::Exp(Type *t, Exp *e)
 
 Exp::Exp(Call *c)
 {
-    // TODO- fill this after we figure out what call is...
+    
 }
 
 Exp::Exp(Node *n)

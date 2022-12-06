@@ -24,30 +24,31 @@ class TableEntry
 
 public:
     TableEntry();
-    explicit TableEntry(string &name, Var_Type &type, string &value, int offset, bool isFunc) // for single symbol
+    explicit TableEntry(string &name, Var_Type type, string &value, int offset) // for single symbol
     {
         this->name = name;
         this->types = vector<Var_Type>(1, type);
         this->returnValue = UNDEFINED;
         this->value = value;
         this->offset = offset;
-        this->isFunc = isFunc;
+        this->isFunc = false;
     }
 
-    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, string &value, int offset, bool isFunc) // for function
+    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, string &value, int offset) // for function
     {
         this->name = name;
         this->types = types;
         this->returnValue = returnValue;
         this->value = value;
         this->offset = offset;
-        this->isFunc = isFunc;
+        this->isFunc = true;
     }
 
     ~TableEntry() = default;
 
     string &getName() { return this->name; }
     vector<Var_Type> &getTypes() { return this->types; }
+    Var_Type getReturnValue() { return this->returnValue; }
     int getOffset() { return this->offset; }
     string &getValue() { return this->value; }
     bool getIsFunc() { return this->isFunc; }
@@ -78,6 +79,7 @@ public:
     list<Table> symbolTables;
     stack<int> offset;
     static bool in_while;
+    static string currentFunction;
 
     Semantic();
     ~Semantic() = default;
@@ -88,11 +90,46 @@ public:
     TableEntry *getTableEntry(string id);
     void openScope();
     void closeScope();
-    bool checkReturnType(Exp *e = nullptr);
+    bool checkReturnType(Var_Type type);
     static bool start_while();
     static bool finish_while();
+
+    string &getCurrentFunction() { return this->currentFunction; }
+    void setCurrentFunction(string &func) { this->currentFunction = func; }
 };
 
 Semantic *sem = new Semantic();
+
+string &convertToString(Var_Type t)
+{
+    string s;
+    switch (t)
+    {
+    case V_INT:
+        s = "int";
+        break;
+    case V_BYTE:
+        s = "byte";
+        break;
+    case V_BOOL:
+        s = "bool";
+        break;
+    case V_STRING:
+        s = "string";
+        break;
+    }
+    return s;
+}
+
+vector<string> &convertToStringVector(vector<Var_Type> vec)
+{
+    vector<string> new_vec = vector<string>();
+    for (Var_Type t : vec)
+    {
+        new_vec.push_back(convertToString(t));
+    }
+
+    return new_vec;
+}
 
 #endif /*SEMANTIC_H*/
