@@ -1,6 +1,29 @@
 #include "classes.h"
 #include "semantic.h"
 
+vector<string> &convertToStringVector(vector<Var_Type> vec)
+{
+    vector<string> new_vec = vector<string>();
+    for (Var_Type t : vec)
+    {
+        switch (t)
+        {
+        case V_INT:
+            new_vec.push_back("int");
+            break;
+        case V_BYTE:
+            new_vec.push_back("byte");
+            break;
+        case V_BOOL:
+            new_vec.push_back("bool");
+            break;
+        case V_STRING:
+            new_vec.push_back("string");
+            break;
+        }
+    }
+}
+
 /****************************************   TYPE   ****************************************/
 
 Type::Type(Type *t)
@@ -144,6 +167,52 @@ Statement::Statement(Node *symbol)
 
     this->type = UNDEFINED;
     this->value = symbol->value;
+}
+
+/****************************************   CALL   ****************************************/
+
+Call::Call(Node *n)
+{
+    TableEntry *ent = sem->getTableEntry(n->value);
+    if (ent == nullptr || !ent->getIsFunc())
+    {
+        errorUndefFunc(yylineno, n->value);
+    }
+
+    if (!ent->getTypes().empty())
+    {
+        errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+    }
+}
+
+Call::Call(Node *n, Explist *exp_list)
+{
+    TableEntry *ent = sem->getTableEntry(n->value);
+    if (ent == nullptr || !ent->getIsFunc())
+    {
+        errorUndefFunc(yylineno, n->value);
+    }
+
+    if (ent->getTypes().size() != exp_list->getExpTypes().size())
+    {
+        errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+    }
+
+    int index = 0;
+    vector temp = exp_list->getExpTypes();
+    for (Var_Type t : ent->getTypes())
+    {
+        if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))
+        {
+            errorPrototypeMismatch(yylineno, n->value, convertToStringVector(ent->getTypes()));
+        }
+        index++;
+    }
+}
+
+/****************************************   EXP_LIST   ****************************************/
+Explist::Explist(Exp *exp)
+{
 }
 
 /****************************************   EXP   ****************************************/
@@ -311,6 +380,8 @@ FormalDecl::FormalDecl(Type *type, Node *node)
     this->value = node->value;
 }
 
+/****************************************   FORMALS_LIST   ****************************************/
+
 FormalsList::FormalsList(FormalDecl *f_dec)
 {
     this->type = UNDEFINED;
@@ -325,6 +396,8 @@ FormalsList::FormalsList(FormalDecl *f_dec, FormalsList *f_list)
     this->declaration = f_list->declaration;
     this->declaration.insert(declaration.begin(), f_dec);
 }
+
+/****************************************   FORMALS  ****************************************/
 
 Formals::Formals(FormalsList *f_list)
 {

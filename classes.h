@@ -61,9 +61,26 @@ class Statement : public Node
     explicit Statement(Node *symbol);
 }
 
+class Exp;
+class Explist;
+
 class Call : public Node
 {
+public:
+    Call(Node *n);
+    Call(Node *n, Explist *exp_list);
 };
+
+class Explist : public Node
+{
+    vector<Exp *> exp_list;
+
+public:
+    Explist(Exp *exp);
+    Explist(Exp *exp, Explist *exp_list);
+
+    vector<Exp *> getExpTypes() { return this->exp_list; }
+}
 
 class Exp : public Node
 {
@@ -100,36 +117,30 @@ public:
 
 class Type : public Node
 {
-    public:
+public:
     explicit Type(Type *t);
     explicit Type(Var_Type v_type);
 };
 
-class Func : public Node
-{
-};
-
 class FormalDecl : public Node
 {
-    public:
-    FormalDecl(Type* type, Node* node);
+public:
+    FormalDecl(Type *type, Node *node);
 };
 
 class Formals : public Node
 {
-    public:
+public:
     vector<FormalDecl *> declaration;
     Formals() = default;
-    Formals(FormalsList* f_list);
+    Formals(FormalsList *f_list);
 };
 
 class FormalsList : public Formals
 {
-    public:
-    FormalsList (FormalDecl* f_dec);
-    FormalsList (FormalDecl* f_dec, FormalsList* f_list);
+public:
+    FormalsList(FormalDecl *f_dec);
+    FormalsList(FormalDecl *f_dec, FormalsList *f_list);
 };
-
-
 
 #endif /*CLASSES_H*/

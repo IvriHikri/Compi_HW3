@@ -32,12 +32,12 @@
 
 %%
 
-Program :   Funcs
+Program :  OPEN_SCOPE Funcs {sem->closeScope();}
 
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN {sem.declareFunction($1, $2, $4);} LBRACE OPEN_SCOPE Statements RBRACE {sem.closeScope();}  
+FuncDecl:RetType ID LPAREN Formals RPAREN {sem->declareFunction($1, $2, $4);} LBRACE OPEN_SCOPE Statements RBRACE {sem->closeScope();}  
 
 RetType :Type {$$ = new Type($1);}
         |VOID {$$ = new Type(V_VOID);}
@@ -102,7 +102,6 @@ OPEN_SCOPE : /*epsilon */ {sem->openScope();}
 
 int main()
 {
-        Semantic sem = new Semantic();
         yyparse();
 }
 

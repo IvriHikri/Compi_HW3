@@ -17,27 +17,41 @@ class TableEntry
 {
     string name;
     vector<Var_Type> types;
+    Var_Type returnValue;
     string value;
     int offset;
     bool isFunc;
 
 public:
     TableEntry();
-    TableEntry(string &name, vector<Var_Type> &types, string &value, int offset, bool isFunc)
+    explicit TableEntry(string &name, Var_Type &type, string &value, int offset, bool isFunc) // for single symbol
     {
         this->name = name;
-        this->types = types;
+        this->types = vector<Var_Type>(1, type);
+        this->returnValue = UNDEFINED;
         this->value = value;
         this->offset = offset;
         this->isFunc = isFunc;
     }
 
+    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, string &value, int offset, bool isFunc) // for function
+    {
+        this->name = name;
+        this->types = types;
+        this->returnValue = returnValue;
+        this->value = value;
+        this->offset = offset;
+        this->isFunc = isFunc;
+    }
+
+    ~TableEntry() = default;
+
     string &getName() { return this->name; }
     vector<Var_Type> &getTypes() { return this->types; }
     int getOffset() { return this->offset; }
     string &getValue() { return this->value; }
+    bool getIsFunc() { return this->isFunc; }
     void setValue(string value) { this->value = value; }
-
 };
 
 class Table
@@ -49,6 +63,8 @@ public:
     {
         symbols = vector<TableEntry>();
     }
+
+    ~Table() = default;
 
     vector<TableEntry> &getEntries()
     {
@@ -67,7 +83,7 @@ public:
     ~Semantic() = default;
 
     void addSymbol(Node *symbol, string &value);
-    void addFunc(Func *func);
+    void declareFunction(Type *type, Node *id, Formals *formals);
     bool isExist(string id);
     TableEntry *getTableEntry(string id);
     void openScope();
@@ -75,7 +91,6 @@ public:
     bool checkReturnType(Exp *e = nullptr);
     static bool start_while();
     static bool finish_while();
-    void declareFunction(Type* type, Node* id, Formals* formals);
 };
 
 Semantic *sem = new Semantic();
