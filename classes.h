@@ -79,7 +79,7 @@ public:
     Explist(Exp *exp);
     Explist(Exp *exp, Explist *exp_list);
 
-    vector<Exp *> getExpTypes() { return this->exp_list; }
+    vector<Exp *> getExpressions() { return this->exp_list; }
 }
 
 class Exp : public Node

@@ -184,13 +184,13 @@ Call::Call(Node *symbol, Explist *exp_list)
         errorUndefFunc(yylineno, symbol->value);
     }
 
-    if (ent->getTypes().size() != exp_list->getExpTypes().size())
+    if (ent->getTypes().size() != exp_list->getExpressions().size())
     {
         errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
     }
 
     int index = 0;
-    vector temp = exp_list->getExpTypes();
+    vector temp = exp_list->getExpressions();
     for (Var_Type t : ent->getTypes())
     {
         if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))

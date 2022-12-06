@@ -90,6 +90,7 @@ public:
     TableEntry *getTableEntry(string id);
     void openScope();
     void closeScope();
+    void findMain();
     bool checkReturnType(Var_Type type);
     static bool start_while();
     static bool finish_while();

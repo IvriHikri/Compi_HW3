@@ -10,9 +10,9 @@ Semantic::Semantic()
 
 void Semantic::openScope()
 {
-    this->symbolTables.emplace_back(Table());
-    if (this->symbolTables.size() == 1)
+    if (this->symbolTables.empty())
     {
+        this->symbolTables.emplace_back(Table());
         string print = "print";
         string printInt = "printi";
         vector<Var_Type> vec_print = vector<Var_Type>(1, V_STRING);
@@ -23,21 +23,22 @@ void Semantic::openScope()
     }
     else
     {
+        this->symbolTables.emplace_back(Table());
         this->offset.push(offset.top());
+    }
+}
+
+void Semantic::findMain()
+{
+    TableEntry *ent = this->getTableEntry(string("main"));
+    if (ent == nullptr || ent->getTypes().size() != 0 || ent->getReturnValue() != V_VOID)
+    {
+        errorMainMissing();
     }
 }
 
 void Semantic::closeScope()
 {
-    if (this->symbolTables.size() == 1)
-    {
-        TableEntry *ent = this->getTableEntry(string("main"));
-        if (ent == nullptr || ent->getTypes().size() != 1 || ent->getTypes()[0] != V_VOID)
-        {
-            errorMainMissing();
-        }
-    }
-
     endScope();
     Table t = this->symbolTables.back();
     for (TableEntry ent : t.getEntries())
@@ -80,6 +81,7 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
     }
 
     this->symbolTables.back().getEntries().emplace_back(TableEntry(id->value, var_types, type->type, id->value, 0));
+    openScope();
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {

@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "list": "cpp",
+        "stack": "cpp",
+        "xstring": "cpp",
+        "*.tcc": "cpp",
+        "string": "cpp"
+    }
+}
