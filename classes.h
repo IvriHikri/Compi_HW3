@@ -23,7 +23,7 @@ class Node
     string value;
     Var_Type type;
 
-    Node();
+    Node() {};
     Node(string token_value) : value(token_value), type(UNDEFINED) {}
     Node(string token_value, Var_Type type) : value(token_value), type(type) {}
 };
