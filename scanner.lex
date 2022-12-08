@@ -29,12 +29,12 @@ else {yylval = new Node(yytext); return ELSE;}
 while {yylval = new Node(yytext); return WHILE;}
 break {yylval = new Node(yytext); return BREAK;}
 continue {yylval = new Node(yytext); return CONTINUE;}
-\; {yylval = new Node(yytext); return SC;}
-\, {yylval = new Node(yytext); return COMMA;}
-\( {yylval = new Node(yytext); return LPAREN;}
-\) {yylval = new Node(yytext); return RPAREN;}
-\{ {yylval = new Node(yytext); return LBRACE;}
-\} {yylval = new Node(yytext); return RBRACE;}
+\; {return SC;}
+\, {return COMMA;}
+\( {return LPAREN;}
+\) {return RPAREN;}
+\{ {return LBRACE;}
+\} { return RBRACE;}
 (<|>|<=|>=) {yylval = new Node(yytext); return RELOP;}
 (==|!=) {yylval = new Node(yytext); return RELOP_EQ;}
 [\+\-] {yylval = new Node(yytext); return BINOP;} 
