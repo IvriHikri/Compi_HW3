@@ -40,13 +40,13 @@ class Program : public Node
 
 class Statement : public Node
 {
-    // Tyte ID;
+    // Type ID;
     explicit Statement(Type *t, Node *symbol);
 
     // Type ID = Exp;
     explicit Statement(Type *t, Node *symbol, Exp *exp);
 
-    // ID = Exp;
+    // ID = Exp; or Return Exp;
     explicit Statement(Node *symbol, Exp *exp);
 
     // Call;

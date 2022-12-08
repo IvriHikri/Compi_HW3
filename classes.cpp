@@ -40,8 +40,14 @@ Type::Type(Var_Type v_type)
 }
 
 /****************************************   STATEMENT   ****************************************/
+
+// Type ID;
 Statement::Statement(Type *t, Node *symbol)
 {
+    if(sem->isExist(symbol->value))
+    {
+        errorDef(yylineno, symbol->value);
+    }
     symbol->type = t->type;
     string emptyVal = "";
     sem->addSymbol(symbol, emptyVal);
@@ -50,6 +56,10 @@ Statement::Statement(Type *t, Node *symbol)
 // Type ID = EXP;
 Statement::Statement(Type *t, Node *symbol, Exp *exp)
 {
+    if(sem->isExist(exp->value))
+    {
+        errorDef(yylineno, exp->value);
+    }
     if (t->type != exp->type && !(t->type == V_INT && exp->type == V_BYTE))
     {
         errorMismatch(yylineno);
@@ -102,7 +112,7 @@ Statement::Statement(Node *symbol, Exp *exp, Statement *s)
     }
     if (symbol->value.compare("while") == 0)
     {
-        sem->finish_while();
+        sem->start_while();
     }
     if (exp->bool_value)
     {
@@ -164,6 +174,7 @@ Call::Call(Node *symbol)
 {
     TableEntry *ent = sem->getTableEntry(symbol->value);
 
+    //יש כאן סתירה- אם אנחנו בכל סקופ שנסגר מסירים את הסמלים, אנחנו גם נסיר את שם הפונקציה.. ואז תמיד ניכנס לפה
     if (ent == nullptr || !ent->getIsFunc())
     {
         errorUndefFunc(yylineno, symbol->value);
@@ -286,21 +297,25 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
 // EXP AND/OR/RELOP EXP
 Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
 {
-    this->value = "boolean expression";
     this->type = V_BOOL;
     if (e1->type == V_BOOL || e2->type == V_BOOL)
     {
         if (n1->value.compare("and") == 0)
+        {
             this->bool_value = e1->bool_value && e2->bool_value;
 
+        }
         else if (n1->value.compare("or") == 0)
+        {
             this->bool_value = e1->bool_value || e2->bool_value;
-
+            this->value = e1->value + "&&" + e2->value;
+        }
         else
         {
             errorMismatch(yylineno);
             // error, TODO
         }
+
     }
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
@@ -316,8 +331,8 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
             this->bool_value = (stoi(e1->value) != stoi(e2->value));
         else if (n1->value.compare("==") == 0)
             this->bool_value = (stoi(e1->value) == stoi(e2->value));
-        else
-            return; // error, need to refill.
+
+        this->value = e1->value + n1->value + e2->value;
     }
     else
     {

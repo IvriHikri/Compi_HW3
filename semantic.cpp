@@ -79,9 +79,10 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
             errorDef(yylineno, f->value);
         var_types.push_back(f->type);
     }
-
     this->symbolTables.back().getEntries().emplace_back(TableEntry(id->value, var_types, type->type, id->value, 0));
+
     openScope();
+    this->symbolTables.emplace_back(Table());
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {
@@ -126,6 +127,7 @@ bool Semantic::checkReturnType(Var_Type type)
     TableEntry *ent = getTableEntry(currentFunction);
     if (ent == nullptr || !ent->getIsFunc())
     {
+        //will be if we closed the scope of a function and then "currentFunction" = ""...
         // shouldn't happen
         exit(1);
     }
