@@ -174,7 +174,6 @@ Call::Call(Node *symbol)
 {
     TableEntry *ent = sem->getTableEntry(symbol->value);
 
-    //יש כאן סתירה- אם אנחנו בכל סקופ שנסגר מסירים את הסמלים, אנחנו גם נסיר את שם הפונקציה.. ואז תמיד ניכנס לפה
     if (ent == nullptr || !ent->getIsFunc())
     {
         errorUndefFunc(yylineno, symbol->value);
@@ -215,7 +214,7 @@ Call::Call(Node *symbol, Explist *exp_list)
         index++;
     }
 
-    sem->setCurrentFunction(symbol->value);
+    sem->setCurrentFunction(symbol->value); // I dont think we need it, why would I care what is the current function? I just want the semanticl analysis to be good...
 
     this->value = symbol->value;
     this->type = ent->getReturnValue();

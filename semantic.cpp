@@ -89,6 +89,8 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
         this->symbolTables.back().getEntries().emplace_back(TableEntry(f->value, f->type, f->value, i));
         i--;
     }
+
+    sem->currentFunction = id->value;
 }
 
 bool Semantic::isExist(string id)
@@ -122,6 +124,7 @@ TableEntry *Semantic::getTableEntry(string id)
     return nullptr;
 }
 
+
 bool Semantic::checkReturnType(Var_Type type)
 {
     TableEntry *ent = getTableEntry(currentFunction);
@@ -134,6 +137,7 @@ bool Semantic::checkReturnType(Var_Type type)
 
     return ((ent->getReturnValue() == type) || (ent->getReturnValue() == V_INT && type == V_BYTE));
 }
+
 
 bool Semantic::start_while()
 {
