@@ -82,7 +82,6 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
     this->symbolTables.back().getEntries().emplace_back(TableEntry(id->value, var_types, type->type, id->value, 0));
 
     openScope();
-    this->symbolTables.emplace_back(Table());
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {

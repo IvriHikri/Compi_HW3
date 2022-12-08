@@ -37,7 +37,7 @@ Program :  OPEN_SCOPE Funcs {sem->findMain();sem->closeScope(); delete sem;}
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {sem->declareFunction($1, $2, $4);} Statements {sem->closeScope();} RBRACE   
+FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {sem->declareFunction($1, $2, $4);} Statements RBRACE {sem->closeScope();}   
 
 RetType :Type {$$ = new Type($1);}
         |VOID {$$ = new Type(V_VOID);}
@@ -70,6 +70,7 @@ WHILE_M : /*epsilon*/ {sem->start_while();}
 
 Call    :ID LPAREN ExpList RPAREN {$$ = new Call($1,$3);}
         |ID LPAREN RPAREN {$$ = new Call($1);}
+
 ExpList :Exp {$$ = new Explist($1);}
         |Exp COMMA ExpList {$$ = new Explist($1,$3);}
 
