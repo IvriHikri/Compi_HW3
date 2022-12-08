@@ -41,11 +41,11 @@ continue {yylval = new Node(yytext); return CONTINUE;}
 [\*\/] {yylval = new Node(yytext); return BINOP_MUL_DIV;}
 \= return ASSIGN;
 ([a-zA-Z][a-zA-Z0-9]*) {yylval = new Node(yytext); return ID;}
-([1-9][0-9]*)|[0] {yylval = new Node(yytext); return NUM;}
+([1-9][0-9]*)|[0] {yylval = new Node(yytext, V_INT); return NUM;}
 (\/\/[^\r\n]*[\r|\n|\r\n]?) ;
 {whitespace} ;
 
-(\"([^\n\r\"\\]|\\[rnt\"\\])+\") {yylval = new String (yytext); return STRING;}
+(\"([^\n\r\"\\]|\\[rnt\"\\])+\") {yylval = new Node (yytext, V_STRING); return STRING;}
 
 . {output::errorLex(yylineno);}
 %%

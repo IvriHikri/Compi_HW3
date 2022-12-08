@@ -28,7 +28,8 @@ public:
     Var_Type type;
 
     Node();
-    Node(string token_name) : value(token_name) {}
+    Node(string token_value) : value(token_value), type(UNDEFINED) {}
+    Node(string token_value, Var_Type type) : value(token_value), type(type) {}
 };
 
 /*************************************         CLASSES        **********************************************************/
