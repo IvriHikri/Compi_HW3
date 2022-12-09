@@ -78,8 +78,8 @@ class Semantic
 public:
     list<Table> symbolTables;
     stack<int> offset;
-    static bool in_while;
-    static string currentFunction;
+    bool in_while;
+    string currentFunction;
 
     Semantic();
     ~Semantic() = default;
@@ -92,45 +92,16 @@ public:
     void closeScope();
     void findMain();
     bool checkReturnType(Var_Type type);
-    static bool start_while();
-    static bool finish_while();
+    bool start_while();
+    bool finish_while();
 
     string &getCurrentFunction() { return this->currentFunction; }
     void setCurrentFunction(string &func) { this->currentFunction = func; }
 };
 
-Semantic *sem = new Semantic();
+static Semantic* sem = new Semantic();
 
-string &convertToString(Var_Type t)
-{
-    string s;
-    switch (t)
-    {
-    case V_INT:
-        s = "int";
-        break;
-    case V_BYTE:
-        s = "byte";
-        break;
-    case V_BOOL:
-        s = "bool";
-        break;
-    case V_STRING:
-        s = "string";
-        break;
-    }
-    return s;
-}
-
-vector<string> &convertToStringVector(vector<Var_Type> vec)
-{
-    vector<string> new_vec = vector<string>();
-    for (Var_Type t : vec)
-    {
-        new_vec.push_back(convertToString(t));
-    }
-
-    return new_vec;
-}
+string &convertToString(Var_Type t);
+vector<string> &convertToStringVector(vector<Var_Type> vec);
 
 #endif /*SEMANTIC_H*/

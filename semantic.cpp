@@ -147,3 +147,35 @@ bool Semantic::finish_while()
 {
     in_while = false;
 }
+
+string &convertToString(Var_Type t)
+{
+    string s;
+    switch (t)
+    {
+    case V_INT:
+        s = "int";
+        break;
+    case V_BYTE:
+        s = "byte";
+        break;
+    case V_BOOL:
+        s = "bool";
+        break;
+    case V_STRING:
+        s = "string";
+        break;
+    }
+    return s;
+}
+
+vector<string> &convertToStringVector(vector<Var_Type> vec)
+{
+    vector<string> new_vec = vector<string>();
+    for (Var_Type t : vec)
+    {
+        new_vec.push_back(convertToString(t));
+    }
+
+    return new_vec;
+}
