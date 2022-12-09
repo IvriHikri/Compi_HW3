@@ -40,8 +40,14 @@ Type::Type(Var_Type v_type)
 }
 
 /****************************************   STATEMENT   ****************************************/
+
+// Type ID;
 Statement::Statement(Type *t, Node *symbol)
 {
+    if(sem->isExist(symbol->value))
+    {
+        errorDef(yylineno, symbol->value);
+    }
     symbol->type = t->type;
     string emptyVal = "";
     sem->addSymbol(symbol, emptyVal);
@@ -50,6 +56,10 @@ Statement::Statement(Type *t, Node *symbol)
 // Type ID = EXP;
 Statement::Statement(Type *t, Node *symbol, Exp *exp)
 {
+    if(sem->isExist(exp->value))
+    {
+        errorDef(yylineno, exp->value);
+    }
     if (t->type != exp->type && !(t->type == V_INT && exp->type == V_BYTE))
     {
         errorMismatch(yylineno);
@@ -102,7 +112,7 @@ Statement::Statement(Node *symbol, Exp *exp, Statement *s)
     }
     if (symbol->value.compare("while") == 0)
     {
-        sem->finish_while();
+        sem->start_while();
     }
     if (exp->bool_value)
     {
@@ -163,6 +173,7 @@ Statement::Statement(Node *symbol)
 Call::Call(Node *symbol)
 {
     TableEntry *ent = sem->getTableEntry(symbol->value);
+
     if (ent == nullptr || !ent->getIsFunc())
     {
         errorUndefFunc(yylineno, symbol->value);
@@ -174,6 +185,9 @@ Call::Call(Node *symbol)
     }
 
     sem->setCurrentFunction(symbol->value);
+
+    this->value = symbol->value;
+    this->type = ent->getReturnValue();
 }
 
 Call::Call(Node *symbol, Explist *exp_list)
@@ -200,7 +214,10 @@ Call::Call(Node *symbol, Explist *exp_list)
         index++;
     }
 
-    sem->setCurrentFunction(symbol->value);
+    sem->setCurrentFunction(symbol->value); // I dont think we need it, why would I care what is the current function? I just want the semanticl analysis to be good...
+
+    this->value = symbol->value;
+    this->type = ent->getReturnValue();
 }
 
 /****************************************   EXP_LIST   ****************************************/
@@ -216,15 +233,18 @@ Explist::Explist(Exp *exp, Explist *exp_list)
 }
 
 /****************************************   EXP   ****************************************/
+
+// (Exp)
 Exp::Exp(Exp *exp)
 {
     this->value = exp->value;
     this->type = exp->type;
 }
 
+// Exp IF EXP else EXP
 Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
 {
-    if (e2->type != V_BOOL)
+    if (e2->type != V_BOOL || (e1->type != e3->type && !((e1->type == V_BYTE && e3->type == V_INT) || (e1->type == V_INT && e3->type == V_BYTE))))
     {
         // TODO- add here a check if e1 and e3 are in the same type or we can cast them..
         errorMismatch(yylineno);
@@ -234,7 +254,7 @@ Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
     this->type = temp->type;
 }
 
-// Binop Expression
+// EXP BINOP EXP
 Exp::Exp(Exp *e1, Node *n, Exp *e2)
 {
     if ((e1->type != V_INT && e1->type != V_BYTE) || (e2->type != V_INT && e2->type != V_BYTE))
@@ -273,23 +293,28 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
     this->value = to_string(num3);
 }
 
-// Boolean Expression
+// EXP AND/OR/RELOP EXP
 Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
 {
-    this->value = "boolean expression";
     this->type = V_BOOL;
     if (e1->type == V_BOOL || e2->type == V_BOOL)
     {
         if (n1->value.compare("and") == 0)
+        {
             this->bool_value = e1->bool_value && e2->bool_value;
 
+        }
         else if (n1->value.compare("or") == 0)
+        {
             this->bool_value = e1->bool_value || e2->bool_value;
-
+            this->value = e1->value + "&&" + e2->value;
+        }
         else
         {
+            errorMismatch(yylineno);
             // error, TODO
         }
+
     }
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
@@ -305,8 +330,8 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
             this->bool_value = (stoi(e1->value) != stoi(e2->value));
         else if (n1->value.compare("==") == 0)
             this->bool_value = (stoi(e1->value) == stoi(e2->value));
-        else
-            return; // error, need to refill.
+
+        this->value = e1->value + n1->value + e2->value;
     }
     else
     {
@@ -314,15 +339,17 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
     }
 }
 
+// NOT EXP
 Exp::Exp(Node *n, Exp *e)
 {
     if (e->type != V_BOOL || n->value.compare("not") != 0)
-        return; // TODO, fill error
+        errorMismatch(yylineno);
 
     this->type = V_BOOL;
     this->bool_value = !e->bool_value;
 }
 
+// (TYPE) EXP
 Exp::Exp(Type *t, Exp *e)
 {
     if (t->type != e->type)
@@ -330,21 +357,24 @@ Exp::Exp(Type *t, Exp *e)
         if (t->type == V_BYTE && e->type == V_INT)
         {
             if (stoi(e->value) > 255)
-                return; // error because byte is bigger than 255
+                errorByteTooLarge(yylineno, e->value); // error because byte is bigger than 255
         }
 
         else if (!(t->type == V_INT && e->type == V_BYTE))
-            return; // errorrrrrrrrrrrrrrrrr
+            errorMismatch(yylineno);
     }
     this->type = t->type;
     this->value = e->value;
 }
 
+// Call
 Exp::Exp(Call *c)
 {
-    
+    this->type = c->type;
+    this->value = c->value;
 }
 
+// TRUE/FALSE/NUM/STRING
 Exp::Exp(Node *n)
 {
     this->value = n->value;
@@ -358,17 +388,21 @@ Exp::Exp(Node *n)
         this->bool_value = false;
         this->type = V_BOOL;
     }
-    else if (n->value.compare("num") == 0) // לא יקרה
+    else if (n->type == V_INT) // לא יקרה
         this->type = V_INT;
-    else if (n->value.compare("string") == 0)
+    else if (n->type == V_STRING)
         this->type = V_STRING;
 }
 
+// NUM B
 Exp::Exp(Node *n1, Node *n2)
 {
-    if (n1->value.compare("num") != 0 || n2->value.compare("b") != 0) // לא יקרה
-        return;                                                       // errorrrrr shouldnt get here..
+    if (n1->type != V_INT  || n2->value.compare("b") != 0)
+        errorMismatch(yylineno);
+
     this->type = V_BYTE;
+    if (stoi(n1->value) >255)
+        errorByteTooLarge(yylineno, n1->value);
     this->value = n1->value;
 }
 

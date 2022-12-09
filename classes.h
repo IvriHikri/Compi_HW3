@@ -16,22 +16,27 @@ enum Var_Type
     V_STRING,
     UNDEFINED
 };
-class Node;
-#define YYSTYPE Node *
-
-// if($1.type != V_BOOL || $3.type != V_BOOL) errorMismatch(yylineno);
 
 class Node
 {
-public:
+    public:
     string value;
     Var_Type type;
 
-    Node();
-    Node(string token_name) : value(token_name) {}
+    Node() {};
+    Node(string token_value) : value(token_value), type(UNDEFINED) {}
+    Node(string token_value, Var_Type type) : value(token_value), type(type) {}
 };
 
+#define YYSTYPE Node *
+
 /*************************************         CLASSES        **********************************************************/
+class Exp;
+class Type;
+class Call;
+class FormalDecl;
+class Formals;
+class FormalsList;
 
 class Program : public Node
 {
@@ -39,13 +44,14 @@ class Program : public Node
 
 class Statement : public Node
 {
-    // Tyte ID;
+    public:
+    // Type ID;
     explicit Statement(Type *t, Node *symbol);
 
     // Type ID = Exp;
     explicit Statement(Type *t, Node *symbol, Exp *exp);
 
-    // ID = Exp;
+    // ID = Exp; or Return Exp;
     explicit Statement(Node *symbol, Exp *exp);
 
     // Call;
@@ -88,31 +94,31 @@ public:
     bool bool_value;
 
     // (Exp)
-    explicit Exp(Exp *exp);
+    Exp(Exp *exp);
 
     // Exp IF EXP else EXP
-    explicit Exp(Exp *e1, Exp *e2, Exp *e3);
+    Exp(Exp *e1, Exp *e2, Exp *e3);
 
     // EXP BINOP EXP
-    explicit Exp(Exp *e1, Node *n, Exp *e2);
+    Exp(Exp *e1, Node *n, Exp *e2);
 
     // EXP AND/OR/RELOP EXP
-    explicit Exp(Var_Type type, Exp *e1, Node *n, Exp *e2);
+    Exp(Var_Type type, Exp *e1, Node *n, Exp *e2);
 
     // NOT EXP
-    explicit Exp(Node *n, Exp *e);
+    Exp(Node *n, Exp *e);
 
     // (TYPE) EXP
-    explicit Exp(Type *t, Exp *e);
+    Exp(Type *t, Exp *e);
 
     // Call
-    explicit Exp(Call *c);
+    Exp(Call *c);
 
     // TRUE/FALSE/NUM/STRING
-    explicit Exp(Node *n);
+    Exp(Node *n);
 
     // NUM B
-    explicit Exp(Node *n1, Node *n2);
+    Exp(Node *n1, Node *n2);
 };
 
 class Type : public Node
