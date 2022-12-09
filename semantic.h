@@ -47,7 +47,7 @@ public:
     ~TableEntry() = default;
 
     string &getName() { return this->name; }
-    vector<Var_Type> &getTypes() { return this->types; }
+    vector<Var_Type> getTypes() { return this->types; }
     Var_Type getReturnValue() { return this->returnValue; }
     int getOffset() { return this->offset; }
     string &getValue() { return this->value; }
@@ -78,8 +78,8 @@ class Semantic
 public:
     list<Table> symbolTables;
     stack<int> offset;
-    static bool in_while;
-    static string currentFunction;
+    bool in_while;
+    string currentFunction;
 
     Semantic();
     ~Semantic() = default;
@@ -92,8 +92,8 @@ public:
     void closeScope();
     void findMain();
     bool checkReturnType(Var_Type type);
-    static bool start_while();
-    static bool finish_while();
+    bool start_while();
+    bool finish_while();
 
     string &getCurrentFunction() { return this->currentFunction; }
     void setCurrentFunction(string &func) { this->currentFunction = func; }
@@ -122,7 +122,7 @@ string &convertToString(Var_Type t)
     return s;
 }
 
-vector<string> &convertToStringVector(vector<Var_Type> vec)
+vector<string> convertToStringVector(vector<Var_Type> vec)
 {
     vector<string> new_vec = vector<string>();
     for (Var_Type t : vec)
