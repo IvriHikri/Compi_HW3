@@ -1,4 +1,182 @@
-#include "semantic.h"
+#include "classes.h"
+
+static list<Table *> symbolTables = list<Table *>();
+static stack<int> offset = stack<int>();
+static bool in_while = false;
+static string currentFunction = "";
+
+string convertToString(Var_Type t)
+{
+    string s;
+    switch (t)
+    {
+    case V_INT:
+        s = "INT";
+        break;
+    case V_BYTE:
+        s = "BYTE";
+        break;
+    case V_BOOL:
+        s = "BOOL";
+        break;
+    case V_STRING:
+        s = "STRING";
+        break;
+    }
+    return s;
+}
+
+vector<string> convertToStringVector(vector<Var_Type> vec)
+{
+    vector<string> new_vec = vector<string>();
+    for (Var_Type t : vec)
+    {
+
+        new_vec.push_back(convertToString(t));
+    }
+
+    return new_vec;
+}
+
+void openScope()
+{
+    if (symbolTables.empty())
+    {
+        symbolTables.emplace_back(new Table());
+        string print = "print";
+        string printInt = "printi";
+        vector<Var_Type> vec_print = vector<Var_Type>(1, V_STRING);
+        vector<Var_Type> vec_printInt = vector<Var_Type>(1, V_INT);
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(print, vec_print, V_VOID, 0));
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(printInt, vec_printInt, V_VOID, 0));
+        offset.push(0);
+    }
+    else
+    {
+        symbolTables.emplace_back(new Table());
+        offset.push(offset.top());
+    }
+}
+
+void findMain()
+{
+    TableEntry *ent = getTableEntry(string("main"));
+    if (ent == nullptr || ent->getTypes().size() != 0 || ent->getReturnValue() != V_VOID)
+    {
+        errorMainMissing();
+    }
+}
+
+void closeScope()
+{
+    endScope();
+    Table *t = symbolTables.back();
+    string s;
+    for (TableEntry *ent : t->getEntries())
+    {
+        if (ent->getIsFunc())
+        {
+            s = convertToString(ent->getReturnValue());
+            vector<string> temp = convertToStringVector(ent->getTypes());
+            printID(ent->getName(), ent->getOffset(), makeFunctionType(s, temp));
+        }
+        else
+        {
+            s = convertToString(ent->getTypes()[0]);
+            printID(ent->getName(), ent->getOffset(), s);
+        }
+    }
+    symbolTables.pop_back();
+    offset.pop();
+    currentFunction = "";
+}
+
+void addSymbol(Node *symbol, string &value)
+{
+    if (isExist(symbol->value))
+    {
+        errorDef(yylineno, symbol->value);
+    }
+
+    symbolTables.back()->getEntries().emplace_back(new TableEntry(symbol->value, symbol->type, offset.top()));
+    offset.top()++;
+}
+
+void declareFunction(Type *type, Id *id, Formals *formals)
+{
+    if (isExist(id->value))
+        errorDef(yylineno, id->value);
+    vector<Var_Type> var_types;
+    for (FormalDecl *f : formals->declaration)
+    {
+        if (isExist(f->value))
+            errorDef(yylineno, f->value);
+        var_types.push_back(f->type);
+    }
+    symbolTables.back()->getEntries().emplace_back(new TableEntry(id->value, var_types, type->type, 0));
+
+    openScope();
+    int i = -1;
+    for (FormalDecl *f : formals->declaration)
+    {
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(f->value, f->type, i));
+        i--;
+    }
+    currentFunction = id->value;
+}
+
+bool isExist(string id)
+{
+    for (Table *t : symbolTables)
+    {
+        for (TableEntry *ent : t->getEntries())
+        {
+            if (ent->getName().compare(id) == 0)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+TableEntry *getTableEntry(string id)
+{
+    for (Table *t : symbolTables)
+    {
+        for (TableEntry *ent : t->getEntries())
+        {
+            if (ent->getName().compare(id) == 0)
+            {
+                return ent;
+            }
+        }
+    }
+    return nullptr;
+}
+
+bool checkReturnType(Var_Type type)
+{
+    TableEntry *ent = getTableEntry(currentFunction);
+    if (ent == nullptr || !ent->getIsFunc())
+    {
+        // will be if we closed the scope of a function and then "currentFunction" = ""...
+        //  shouldn't happen
+        exit(1);
+    }
+
+    return ((ent->getReturnValue() == type) || (ent->getReturnValue() == V_INT && type == V_BYTE));
+}
+
+bool start_while()
+{
+    in_while = true;
+}
+
+bool finish_while()
+{
+    in_while = false;
+}
 
 /****************************************   TYPE   ****************************************/
 
@@ -41,21 +219,21 @@ Type::Type(Var_Type v_type)
 /****************************************   STATEMENT   ****************************************/
 
 // Type ID;
-Statement::Statement(Type *t, Node *symbol)
+Statement::Statement(Type *t, Id *symbol)
 {
-    if (sem->isExist(symbol->value))
+    if (isExist(symbol->value))
     {
         errorDef(yylineno, symbol->value);
     }
     symbol->type = t->type;
     string emptyVal = "";
-    sem->addSymbol(symbol, emptyVal);
+    addSymbol(symbol, emptyVal);
 }
 
 // Type ID = EXP;
-Statement::Statement(Type *t, Node *symbol, Exp *exp)
+Statement::Statement(Type *t, Id *symbol, Exp *exp)
 {
-    if (sem->isExist(exp->value))
+    if (isExist(exp->value))
     {
         errorDef(yylineno, exp->value);
     }
@@ -65,33 +243,33 @@ Statement::Statement(Type *t, Node *symbol, Exp *exp)
     }
 
     symbol->type = t->type;
-    sem->addSymbol(symbol, exp->value);
+    addSymbol(symbol, exp->value);
 }
 
-// ID = Exp; OR return Exp;
+// ID = Exp;
+Statement::Statement(Id *symbol, Exp *exp)
+{
+    TableEntry *ent = getTableEntry(symbol->value);
+    if (ent == nullptr || ent->getIsFunc())
+    {
+        errorUndef(yylineno, symbol->value);
+    }
+
+    if (ent->getTypes()[0] != exp->type && !(ent->getTypes()[0] == V_INT && exp->type == V_BYTE))
+    {
+        errorMismatch(yylineno);
+    }
+}
+
+// return Exp;
 Statement::Statement(Node *symbol, Exp *exp)
 {
     if (symbol->value.compare("return") == 0)
     {
-        if (!sem->checkReturnType(exp->type))
+        if (!checkReturnType(exp->type))
         {
             errorMismatch(yylineno);
         }
-    }
-    else
-    {
-        TableEntry *ent = sem->getTableEntry(symbol->value);
-        if (ent == nullptr || ent->getIsFunc())
-        {
-            errorUndef(yylineno, symbol->value);
-        }
-
-        if (ent->getReturnValue() != exp->type && !(ent->getReturnValue() == V_INT && exp->type == V_BYTE))
-        {
-            errorMismatch(yylineno);
-        }
-
-        ent->setValue(exp->value);
     }
 }
 
@@ -105,13 +283,16 @@ Statement::Statement(Call *call)
 // IF/WHILE (EXP) Statement
 Statement::Statement(Node *symbol, Exp *exp, Statement *s)
 {
+    //cout << exp->value << endl;
     if (exp->type != V_BOOL)
     {
+        //cout << "fall here" << endl;
+        //cout << "the type  is " << convertToString(exp->type) << endl;
         errorMismatch(yylineno);
     }
     if (symbol->value.compare("while") == 0)
     {
-        sem->start_while();
+        start_while();
     }
     if (exp->bool_value)
     {
@@ -143,21 +324,21 @@ Statement::Statement(Node *symbol)
 {
     if (symbol->value.compare("return") == 0)
     {
-        if (!sem->checkReturnType(V_VOID))
+        if (!checkReturnType(V_VOID))
         {
             errorMismatch(yylineno);
         }
     }
     else if (symbol->value.compare("break") == 0)
     {
-        if (!sem->in_while)
+        if (!in_while)
         {
             errorUnexpectedBreak(yylineno);
         }
     }
     else if (symbol->value.compare("continue") == 0)
     {
-        if (!sem->in_while)
+        if (!in_while)
         {
             errorUnexpectedContinue(yylineno);
         }
@@ -169,9 +350,9 @@ Statement::Statement(Node *symbol)
 
 /****************************************   CALL   ****************************************/
 
-Call::Call(Node *symbol)
+Call::Call(Id *symbol)
 {
-    TableEntry *ent = sem->getTableEntry(symbol->value);
+    TableEntry *ent = getTableEntry(symbol->value);
 
     if (ent == nullptr || !ent->getIsFunc())
     {
@@ -180,19 +361,17 @@ Call::Call(Node *symbol)
 
     if (!ent->getTypes().empty())
     {
-        vector temp = ent->convertToStringVector(ent->getTypes());
+        vector temp = convertToStringVector(ent->getTypes());
         errorPrototypeMismatch(yylineno, symbol->value, temp);
     }
-
-    sem->setCurrentFunction(symbol->value);
 
     this->value = symbol->value;
     this->type = ent->getReturnValue();
 }
 
-Call::Call(Node *symbol, Explist *exp_list)
+Call::Call(Id *symbol, Explist *exp_list)
 {
-    TableEntry *ent = sem->getTableEntry(symbol->value);
+    TableEntry *ent = getTableEntry(symbol->value);
     if (ent == nullptr || !ent->getIsFunc())
     {
         errorUndefFunc(yylineno, symbol->value);
@@ -200,7 +379,7 @@ Call::Call(Node *symbol, Explist *exp_list)
 
     if (ent->getTypes().size() != exp_list->getExpressions().size())
     {
-        vector temp = ent->convertToStringVector(ent->getTypes());
+        vector temp = convertToStringVector(ent->getTypes());
         errorPrototypeMismatch(yylineno, symbol->value, temp);
     }
 
@@ -210,13 +389,11 @@ Call::Call(Node *symbol, Explist *exp_list)
     {
         if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))
         {
-            vector temp = ent->convertToStringVector(ent->getTypes());
+            vector temp = convertToStringVector(ent->getTypes());
             errorPrototypeMismatch(yylineno, symbol->value, temp);
         }
         index++;
     }
-
-    sem->setCurrentFunction(symbol->value); // I dont think we need it, why would I care what is the current function? I just want the semanticl analysis to be good...
 
     this->value = symbol->value;
     this->type = ent->getReturnValue();
@@ -268,47 +445,21 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
         this->type = V_INT;
     else
         this->type = V_BYTE;
-    std::cout << "first number " << e1->value << " second number " << e2->value << std::endl;
-    int num1 = stoi(e1->value);
-    int num2 = stoi(e2->value);
-    int num3;
-    string op = n->value;
-    if (op.compare("+") == 0)
-        num3 = num1 + num2;
-
-    else if (op.compare("-") == 0)
-        num3 = num1 - num2;
-
-    else if (op.compare("*") == 0)
-        num3 = num1 * num2;
-
-    else if (op.compare("/") == 0)
-        num3 = num1 / num2;
-
-    else
-        ;
-    // shouldnt get here, but this means that the n1 is not binop..
-
-    if (this->type == V_BYTE && num3 > 255)
-        errorByteTooLarge(yylineno, to_string(num3));
-
-    this->value = to_string(num3);
+    this->value = e1->value + " " + n->value + " " + e2->value;
 }
 
 // EXP AND/OR/RELOP EXP
 Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
 {
     this->type = V_BOOL;
-    if (e1->type == V_BOOL || e2->type == V_BOOL)
+    if (e1->type == V_BOOL && e2->type == V_BOOL)
     {
         if (n1->value.compare("and") == 0)
         {
-            this->bool_value = e1->bool_value && e2->bool_value;
             this->value = e1->value + "&&" + e2->value;
         }
         else if (n1->value.compare("or") == 0)
         {
-            this->bool_value = e1->bool_value || e2->bool_value;
             this->value = e1->value + "||" + e2->value;
         }
         else
@@ -318,20 +469,7 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
     }
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
-        if (n1->value.compare("<") == 0)
-            this->bool_value = (stoi(e1->value) < stoi(e2->value));
-        else if (n1->value.compare(">") == 0)
-            this->bool_value = (stoi(e1->value) > stoi(e2->value));
-        else if (n1->value.compare("<=") == 0)
-            this->bool_value = (stoi(e1->value) <= stoi(e2->value));
-        else if (n1->value.compare(">=") == 0)
-            this->bool_value = (stoi(e1->value) >= stoi(e2->value));
-        else if (n1->value.compare("!=") == 0)
-            this->bool_value = (stoi(e1->value) != stoi(e2->value));
-        else if (n1->value.compare("==") == 0)
-            this->bool_value = (stoi(e1->value) == stoi(e2->value));
-
-        this->value = e1->value + n1->value + e2->value;
+        this->value = e1->value + " " + n1->value + " " + e2->value;
     }
     else
     {
@@ -354,13 +492,7 @@ Exp::Exp(Type *t, Exp *e)
 {
     if (t->type != e->type)
     {
-        if (t->type == V_BYTE && e->type == V_INT)
-        {
-            if (stoi(e->value) > 255)
-                errorByteTooLarge(yylineno, e->value); // error because byte is bigger than 255
-        }
-
-        else if (!(t->type == V_INT && e->type == V_BYTE))
+        if (!(t->type == V_BYTE && e->type == V_INT) && !(t->type == V_INT && e->type == V_BYTE))
             errorMismatch(yylineno);
     }
     this->type = t->type;
@@ -372,6 +504,20 @@ Exp::Exp(Call *c)
 {
     this->type = c->type;
     this->value = c->value;
+}
+
+// ID
+Exp::Exp(Id *id)
+{
+    TableEntry *ent = getTableEntry(id->value);
+    if (ent == nullptr)
+    {
+        errorUndef(yylineno, id->value);
+    }
+    //cout << "type is " << convertToString(ent->getTypes()[0]) << endl;
+    this->value = ent->getName();
+    this->type = ent->getTypes()[0];
+    //cout << "type is " << convertToString(this->type) << endl;
 }
 
 // TRUE/FALSE/NUM/STRING
@@ -390,8 +536,8 @@ Exp::Exp(Node *n)
     }
     else if (n->type == V_INT)
     {
-        this->type = V_INT;
         this->value = n->value;
+        this->type = V_INT;
     }
     else if (n->type == V_STRING)
     {
@@ -414,10 +560,10 @@ Exp::Exp(Node *n1, Node *n2)
 }
 
 /****************************************   FORMAL_DECLERATION   ****************************************/
-FormalDecl::FormalDecl(Type *type, Node *node)
+FormalDecl::FormalDecl(Type *type, Id *symbol)
 {
     this->type = type->type;
-    this->value = node->value;
+    this->value = symbol->value;
 }
 
 /****************************************   FORMALS_LIST   ****************************************/

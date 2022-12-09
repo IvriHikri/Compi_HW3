@@ -18,28 +18,25 @@ class TableEntry
     string name;
     vector<Var_Type> types;
     Var_Type returnValue;
-    string value;
     int offset;
     bool isFunc;
 
 public:
     TableEntry();
-    explicit TableEntry(string &name, Var_Type type, string &value, int offset) // for single symbol
+    explicit TableEntry(string name, Var_Type type, int offset) // for single symbol
     {
         this->name = name;
         this->types = vector<Var_Type>(1, type);
         this->returnValue = UNDEFINED;
-        this->value = value;
         this->offset = offset;
         this->isFunc = false;
     }
 
-    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, string &value, int offset) // for function
+    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, int offset) // for function
     {
         this->name = name;
         this->types = types;
         this->returnValue = returnValue;
-        this->value = value;
         this->offset = offset;
         this->isFunc = true;
     }
@@ -50,9 +47,7 @@ public:
     vector<Var_Type> &getTypes() { return this->types; }
     Var_Type getReturnValue() { return this->returnValue; }
     int getOffset() { return this->offset; }
-    string &getValue() { return this->value; }
     bool getIsFunc() { return this->isFunc; }
-    void setValue(string value) { this->value = value; }
 
     string convertToString(Var_Type t)
     {
@@ -90,12 +85,12 @@ public:
 
 class Table
 {
-    vector<TableEntry*> symbols;
+    vector<TableEntry *> symbols;
 
 public:
     Table()
     {
-        symbols = vector<TableEntry*>();
+        symbols = vector<TableEntry *>();
     }
 
     ~Table() = default;
@@ -106,32 +101,20 @@ public:
     }
 };
 
-class Semantic
-{
-public:
-    list<Table*> symbolTables;
-    stack<int> offset;
-    bool in_while;
-    string currentFunction;
+static list<Table *> symbolTables = list<Table *>();
+static stack<int> offset = stack<int>();
+static bool in_while = false;
+static string currentFunction = "";
 
-    Semantic();
-    ~Semantic() = default;
-
-    void addSymbol(Node *symbol, string &value);
-    void declareFunction(Type *type, Node *id, Formals *formals);
-    bool isExist(string id);
-    TableEntry *getTableEntry(string id);
-    void openScope();
-    void closeScope();
-    void findMain();
-    bool checkReturnType(Var_Type type);
-    bool start_while();
-    bool finish_while();
-
-    string &getCurrentFunction() { return this->currentFunction; }
-    void setCurrentFunction(string &func) { this->currentFunction = func; }
-};
-
-static Semantic *sem = new Semantic();
+void addSymbol(Node *symbol, string &value);
+void declareFunction(Type *type, Id *id, Formals *formals);
+bool isExist(string id);
+TableEntry *getTableEntry(string id);
+void openScope();
+void closeScope();
+void findMain();
+bool checkReturnType(Var_Type type);
+bool start_while();
+bool finish_while();
 
 #endif /*SEMANTIC_H*/

@@ -1,46 +1,39 @@
 #include "semantic.h"
 
-Semantic::Semantic()
-{
-    symbolTables = list<Table*>();
-    offset = stack<int>();
-    in_while = false;
-    currentFunction = "";
-}
 
-void Semantic::openScope()
+void openScope()
 {
-    if (this->symbolTables.empty())
+    if (symbolTables.empty())
     {
-        this->symbolTables.emplace_back(new Table());
+        symbolTables.emplace_back(new Table());
         string print = "print";
         string printInt = "printi";
         vector<Var_Type> vec_print = vector<Var_Type>(1, V_STRING);
         vector<Var_Type> vec_printInt = vector<Var_Type>(1, V_INT);
-        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(print, vec_print, V_VOID, print, 0));
-        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(printInt, vec_printInt, V_VOID, printInt, 0));
-        this->offset.push(0);
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(print, vec_print, V_VOID, 0));
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(printInt, vec_printInt, V_VOID, 0));
+        offset.push(0);
     }
     else
     {
-        this->symbolTables.emplace_back(new Table());
-        this->offset.push(offset.top());
+        symbolTables.emplace_back(new Table());
+        offset.push(offset.top());
     }
 }
 
-void Semantic::findMain()
+void findMain()
 {
-    TableEntry *ent = this->getTableEntry(string("main"));
+    TableEntry *ent = getTableEntry(string("main"));
     if (ent == nullptr || ent->getTypes().size() != 0 || ent->getReturnValue() != V_VOID)
     {
         errorMainMissing();
     }
 }
 
-void Semantic::closeScope()
+void closeScope()
 {
     endScope();
-    Table* t = this->symbolTables.back();
+    Table *t = symbolTables.back();
     string s;
     for (TableEntry *ent : t->getEntries())
     {
@@ -56,23 +49,23 @@ void Semantic::closeScope()
             printID(ent->getName(), ent->getOffset(), s);
         }
     }
-    this->symbolTables.pop_back();
-    this->offset.pop();
-    this->currentFunction = "";
+    symbolTables.pop_back();
+    offset.pop();
+    currentFunction = "";
 }
 
-void Semantic::addSymbol(Node *symbol, string &value)
+void addSymbol(Node *symbol, string &value)
 {
     if (isExist(symbol->value))
     {
         errorDef(yylineno, symbol->value);
     }
 
-    this->symbolTables.back()->getEntries().emplace_back(new TableEntry(symbol->value, symbol->type, value, this->offset.top()));
-    this->offset.top()++;
+    symbolTables.back()->getEntries().emplace_back(new TableEntry(symbol->value, symbol->type, offset.top()));
+    offset.top()++;
 }
 
-void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
+void declareFunction(Type *type, Id *id, Formals *formals)
 {
     if (isExist(id->value))
         errorDef(yylineno, id->value);
@@ -83,24 +76,31 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
             errorDef(yylineno, f->value);
         var_types.push_back(f->type);
     }
-    this->symbolTables.back()->getEntries().emplace_back(new TableEntry(id->value, var_types, type->type, id->value, 0));
+    symbolTables.back()->getEntries().emplace_back(new TableEntry(id->value, var_types, type->type, 0));
 
     openScope();
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {
-        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(f->value, f->type, f->value, i));
+        symbolTables.back()->getEntries().emplace_back(new TableEntry(f->value, f->type, i));
         i--;
     }
-
-    sem->currentFunction = id->value;
+    currentFunction = id->value;
+    cout << "tables: " << symbolTables.size() << endl;
+    for (Table *t : symbolTables)
+    {
+        for (TableEntry *ent : t->getEntries())
+        {
+            cout << ent->getName() << endl;
+        }
+    }
 }
 
-bool Semantic::isExist(string id)
+bool isExist(string id)
 {
-    for (Table* t : symbolTables)
+    for (Table *t : symbolTables)
     {
-        for (TableEntry* ent : t->getEntries())
+        for (TableEntry *ent : t->getEntries())
         {
             if (ent->getName().compare(id) == 0)
             {
@@ -111,43 +111,42 @@ bool Semantic::isExist(string id)
     return false;
 }
 
-TableEntry *Semantic::getTableEntry(string id)
+TableEntry* getTableEntry(string id)
 {
-    for (Table* t : symbolTables)
+    for (Table *t : symbolTables)
     {
-        for (TableEntry* ent : t->getEntries())
+        for (TableEntry *ent : t->getEntries())
         {
+            cout << ent->getName() << endl;
+            cout << ent->getName().compare(id) << endl;
             if (ent->getName().compare(id) == 0)
             {
                 return ent;
             }
         }
     }
-
     return nullptr;
 }
 
-
-bool Semantic::checkReturnType(Var_Type type)
+bool checkReturnType(Var_Type type)
 {
     TableEntry *ent = getTableEntry(currentFunction);
     if (ent == nullptr || !ent->getIsFunc())
     {
-        //will be if we closed the scope of a function and then "currentFunction" = ""...
-        // shouldn't happen
+        // will be if we closed the scope of a function and then "currentFunction" = ""...
+        //  shouldn't happen
         exit(1);
     }
 
     return ((ent->getReturnValue() == type) || (ent->getReturnValue() == V_INT && type == V_BYTE));
 }
 
-
-bool Semantic::start_while()
+bool start_while()
 {
     in_while = true;
 }
 
-bool Semantic::finish_while()
+bool finish_while()
 {
     in_while = false;
 }

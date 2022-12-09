@@ -1,7 +1,6 @@
 %{
         #include <stdio.h>
         #include "hw3_output.hpp"
-        #include "semantic.h"
         #include "classes.h"
         #include <iostream>
         #include <stdlib.h>
@@ -32,12 +31,12 @@
 
 %%
 
-Program :  OPEN_SCOPE Funcs {sem->findMain();sem->closeScope(); delete sem;}
+Program :  OPEN_SCOPE Funcs {findMain();closeScope();}
 
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {sem->declareFunction((Type*)$1, $2, (Formals*)$4);} Statements RBRACE {sem->closeScope();}   
+FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} Statements RBRACE {closeScope();}   
 
 RetType :Type {$$ = new Type((Type*)$1);}
         |VOID {$$ = new Type(V_VOID);}
@@ -48,28 +47,28 @@ Formals :/* Epsilon */ {$$ = new Formals();}
 FormalsList : FormalDecl {$$ = new FormalsList((FormalDecl*)$1);} 
             | FormalDecl COMMA FormalsList {$$ = new FormalsList((FormalDecl*)$1, (FormalsList*)$3);}
 
-FormalDecl  :Type ID {$$ = new FormalDecl((Type*)$1, $2);}
+FormalDecl  :Type ID {$$ = new FormalDecl((Type*)$1, (Id*)$2);}
 
 Statements  :Statement
             |Statements Statement
 
-Statement   :LBRACE OPEN_SCOPE Statements {sem->closeScope();} RBRACE 
-        |Type ID SC {$$ = new Statement((Type*)$1,$2);}
-        |Type ID ASSIGN Exp SC {$$ = new Statement((Type*)$1,$2,(Exp*)$4);}
-        |ID ASSIGN Exp SC {$$ = new Statement($1,(Exp*)$3);}
+Statement   :LBRACE OPEN_SCOPE Statements RBRACE {closeScope();}
+        |Type ID SC {$$ = new Statement((Type*)$1,(Id*)$2);}
+        |Type ID ASSIGN Exp SC {$$ = new Statement((Type*)$1,(Id*)$2,(Exp*)$4);}
+        |ID ASSIGN Exp SC {$$ = new Statement((Id*)$1,(Exp*)$3);}
         |Call SC {$$ = new Statement((Call*)$1);}
         |RETURN SC {$$ = new Statement($1);}
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
-        |IF LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$3,(Statement*)$5);}
-        |IF LPAREN Exp RPAREN Statement ELSE Statement {$$ = new Statement((Exp*)$3,(Statement*)$5,(Statement*)$7);}
-        |WHILE WHILE_M LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$4,(Statement*)$6);}
-        |BREAK SC {$$ = new Statement($1);}
+        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$4,(Statement*)$6);}
+        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement ELSE {closeScope();} OPEN_SCOPE Statement {$$ = new Statement((Exp*)$4,(Statement*)$6,(Statement*)$10);}
+        |WHILE WHILE_M LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$5,(Statement*)$6);}
+        |BREAK SC {$$ = new Statement($1); closeScope();}
         |CONTINUE SC {$$ = new Statement($1);}
 
-WHILE_M : /*epsilon*/ {sem->start_while();}
+WHILE_M : /*epsilon*/ {start_while();}
 
-Call    :ID LPAREN ExpList RPAREN {$$ = new Call($1,(Explist*)$3);}
-        |ID LPAREN RPAREN {$$ = new Call($1);}
+Call    :ID LPAREN ExpList RPAREN {$$ = new Call((Id*)$1,(Explist*)$3);}
+        |ID LPAREN RPAREN {$$ = new Call((Id*)$1);}
 
 ExpList :Exp {$$ = new Explist((Exp*)$1);}
         |Exp COMMA ExpList {$$ = new Explist((Exp*)$1, (Explist*)$3);}
@@ -82,7 +81,7 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ((Exp*)$2);}
     |Exp IF LPAREN Exp RPAREN ELSE Exp {$$ = new Exp ((Exp*)$1, (Exp*)$4, (Exp*)$7);}
     |Exp BINOP Exp {$$ = new Exp ((Exp*)$1, $2, (Exp*)$3);}
     |Exp BINOP_MUL_DIV Exp {$$ = new Exp ((Exp*)$1, $2, (Exp*)$3);}
-    |ID {$$ = new Exp ($1);}
+    |ID {$$ = new Exp ((Id*)$1);}
     |Call {$$ = new Exp ((Call*)$1);}
     |NUM {$$ = new Exp ($1);}
     |NUM B {$$ = new Exp ($1, $2);}
@@ -97,7 +96,7 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ((Exp*)$2);}
     |LPAREN Type RPAREN Exp {$$ = new Exp ((Type*)$2,(Exp*)$4);} 
 
 
-OPEN_SCOPE : /*epsilon */ {sem->openScope();}
+OPEN_SCOPE : /*epsilon */ {openScope();}
 %%
 
 int main()

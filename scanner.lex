@@ -41,8 +41,8 @@ continue {yylval = new Node(yytext); return CONTINUE;}
 [\+\-] {yylval = new Node(yytext); return BINOP;} 
 [\*\/] {yylval = new Node(yytext); return BINOP_MUL_DIV;}
 \= return ASSIGN;
-([a-zA-Z][a-zA-Z0-9]*) {yylval = new Node(yytext); return ID;}
-([1-9][0-9]*)|[0] {printf(yytext) ; yylval = new Node(yytext, V_INT); return NUM;}
+([a-zA-Z][a-zA-Z0-9]*) {yylval = new Id(yytext); return ID;}
+([1-9][0-9]*)|[0] {yylval = new Node(yytext, V_INT); return NUM;}
 (\/\/[^\r\n]*[\r|\n|\r\n]?) ;
 {whitespace} ;
 

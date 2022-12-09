@@ -2,6 +2,10 @@
 #define CLASSES_H
 
 #include "hw3_output.hpp"
+#include <vector>
+#include <string>
+#include <list>
+#include <stack>
 #include <iostream>
 extern int yylineno;
 using namespace output;
@@ -33,8 +37,6 @@ public:
     {
         this->value = token_value;
         this->type = type;
-        printf("reduced number value : %s\n", token_value);
-        cout << "but I'm getting : " << value << endl;
     }
 };
 
@@ -48,6 +50,12 @@ class FormalDecl;
 class Formals;
 class FormalsList;
 
+class Id : public Node
+{
+public:
+    Id(string value) : Node(value) {}
+};
+
 class Program : public Node
 {
 };
@@ -56,12 +64,15 @@ class Statement : public Node
 {
 public:
     // Type ID;
-    explicit Statement(Type *t, Node *symbol);
+    explicit Statement(Type *t, Id *symbol);
 
     // Type ID = Exp;
-    explicit Statement(Type *t, Node *symbol, Exp *exp);
+    explicit Statement(Type *t, Id *symbol, Exp *exp);
 
-    // ID = Exp; or Return Exp;
+    // ID = Exp;
+    explicit Statement(Id *symbol, Exp *exp);
+
+    // Return Exp;
     explicit Statement(Node *symbol, Exp *exp);
 
     // Call;
@@ -83,8 +94,8 @@ class Explist;
 class Call : public Node
 {
 public:
-    Call(Node *n);
-    Call(Node *n, Explist *exp_list);
+    Call(Id *n);
+    Call(Id *n, Explist *exp_list);
 };
 
 class Explist : public Node
@@ -127,6 +138,9 @@ public:
     // TRUE/FALSE/NUM/STRING
     Exp(Node *n);
 
+    // ID
+    Exp(Id *id);
+
     // NUM B
     Exp(Node *n1, Node *n2);
 };
@@ -141,7 +155,7 @@ public:
 class FormalDecl : public Node
 {
 public:
-    FormalDecl(Type *type, Node *node);
+    FormalDecl(Type *type, Id *symbol);
 };
 
 class Formals : public Node
@@ -158,5 +172,74 @@ public:
     FormalsList(FormalDecl *f_dec);
     FormalsList(FormalDecl *f_dec, FormalsList *f_list);
 };
+
+class TableEntry
+{
+    string name;
+    vector<Var_Type> types;
+    Var_Type returnValue;
+    int offset;
+    bool isFunc;
+
+public:
+    TableEntry();
+    explicit TableEntry(string name, Var_Type type, int offset) // for single symbol
+    {
+        this->name = name;
+        this->types = vector<Var_Type>(1, type);
+        this->returnValue = UNDEFINED;
+        this->offset = offset;
+        this->isFunc = false;
+    }
+
+    explicit TableEntry(string &name, vector<Var_Type> &types, Var_Type returnValue, int offset) // for function
+    {
+        this->name = name;
+        this->types = types;
+        this->returnValue = returnValue;
+        this->offset = offset;
+        this->isFunc = true;
+    }
+
+    ~TableEntry() = default;
+
+    string &getName() { return this->name; }
+    vector<Var_Type> &getTypes() { return this->types; }
+    Var_Type getReturnValue() { return this->returnValue; }
+    int getOffset() { return this->offset; }
+    bool getIsFunc() { return this->isFunc; }
+};
+
+class Table
+{
+    vector<TableEntry *> symbols;
+
+public:
+    Table()
+    {
+        symbols = vector<TableEntry *>();
+    }
+
+    ~Table() = default;
+
+    vector<TableEntry *> &getEntries()
+    {
+        return this->symbols;
+    }
+};
+
+void addSymbol(Node *symbol, string &value);
+void declareFunction(Type *type, Id *id, Formals *formals);
+bool isExist(string id);
+TableEntry *getTableEntry(string id);
+void openScope();
+void closeScope();
+void findMain();
+bool checkReturnType(Var_Type type);
+bool start_while();
+bool finish_while();
+string convertToString(Var_Type t);
+vector<string> convertToStringVector(vector<Var_Type> vec);
+
 
 #endif /*CLASSES_H*/
