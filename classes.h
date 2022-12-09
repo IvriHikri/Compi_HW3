@@ -59,7 +59,7 @@ class Statement : public Node
 
     // BREAK/ CONTINUE/ RETURN
     explicit Statement(Node *symbol);
-}
+};
 
 class Exp;
 class Explist;
@@ -80,7 +80,7 @@ public:
     Explist(Exp *exp, Explist *exp_list);
 
     vector<Exp *> getExpressions() { return this->exp_list; }
-}
+};
 
 class Exp : public Node
 {
