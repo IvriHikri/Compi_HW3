@@ -47,27 +47,60 @@ public:
     ~TableEntry() = default;
 
     string &getName() { return this->name; }
-    vector<Var_Type> getTypes() { return this->types; }
+    vector<Var_Type> &getTypes() { return this->types; }
     Var_Type getReturnValue() { return this->returnValue; }
     int getOffset() { return this->offset; }
     string &getValue() { return this->value; }
     bool getIsFunc() { return this->isFunc; }
     void setValue(string value) { this->value = value; }
+
+    string convertToString(Var_Type t)
+    {
+        string s;
+        switch (t)
+        {
+        case V_INT:
+            s = "int";
+            break;
+        case V_BYTE:
+            s = "byte";
+            break;
+        case V_BOOL:
+            s = "bool";
+            break;
+        case V_STRING:
+            s = "string";
+            break;
+        }
+        return s;
+    }
+
+    vector<string> convertToStringVector(vector<Var_Type> vec)
+    {
+        vector<string> new_vec = vector<string>();
+        for (Var_Type t : vec)
+        {
+
+            new_vec.push_back(convertToString(t));
+        }
+
+        return new_vec;
+    }
 };
 
 class Table
 {
-    vector<TableEntry> symbols;
+    vector<TableEntry*> symbols;
 
 public:
     Table()
     {
-        symbols = vector<TableEntry>();
+        symbols = vector<TableEntry*>();
     }
 
     ~Table() = default;
 
-    vector<TableEntry> &getEntries()
+    vector<TableEntry *> &getEntries()
     {
         return this->symbols;
     }
@@ -76,7 +109,7 @@ public:
 class Semantic
 {
 public:
-    list<Table> symbolTables;
+    list<Table*> symbolTables;
     stack<int> offset;
     bool in_while;
     string currentFunction;
@@ -99,38 +132,6 @@ public:
     void setCurrentFunction(string &func) { this->currentFunction = func; }
 };
 
-Semantic *sem = new Semantic();
-
-string &convertToString(Var_Type t)
-{
-    string s;
-    switch (t)
-    {
-    case V_INT:
-        s = "int";
-        break;
-    case V_BYTE:
-        s = "byte";
-        break;
-    case V_BOOL:
-        s = "bool";
-        break;
-    case V_STRING:
-        s = "string";
-        break;
-    }
-    return s;
-}
-
-vector<string> convertToStringVector(vector<Var_Type> vec)
-{
-    vector<string> new_vec = vector<string>();
-    for (Var_Type t : vec)
-    {
-        new_vec.push_back(convertToString(t));
-    }
-
-    return new_vec;
-}
+static Semantic *sem = new Semantic();
 
 #endif /*SEMANTIC_H*/

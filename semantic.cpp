@@ -2,7 +2,7 @@
 
 Semantic::Semantic()
 {
-    symbolTables = list<Table>();
+    symbolTables = list<Table*>();
     offset = stack<int>();
     in_while = false;
     currentFunction = "";
@@ -12,18 +12,18 @@ void Semantic::openScope()
 {
     if (this->symbolTables.empty())
     {
-        this->symbolTables.emplace_back(Table());
+        this->symbolTables.emplace_back(new Table());
         string print = "print";
         string printInt = "printi";
         vector<Var_Type> vec_print = vector<Var_Type>(1, V_STRING);
         vector<Var_Type> vec_printInt = vector<Var_Type>(1, V_INT);
-        this->symbolTables.back().getEntries().emplace_back(TableEntry(print, vec_print, V_VOID, print, 0));
-        this->symbolTables.back().getEntries().emplace_back(TableEntry(printInt, vec_printInt, V_VOID, printInt, 0));
+        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(print, vec_print, V_VOID, print, 0));
+        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(printInt, vec_printInt, V_VOID, printInt, 0));
         this->offset.push(0);
     }
     else
     {
-        this->symbolTables.emplace_back(Table());
+        this->symbolTables.emplace_back(new Table());
         this->offset.push(offset.top());
     }
 }
@@ -40,16 +40,20 @@ void Semantic::findMain()
 void Semantic::closeScope()
 {
     endScope();
-    Table t = this->symbolTables.back();
-    for (TableEntry ent : t.getEntries())
+    Table* t = this->symbolTables.back();
+    string s;
+    for (TableEntry *ent : t->getEntries())
     {
-        if (ent.getIsFunc())
+        if (ent->getIsFunc())
         {
-            printID(ent.getName(), ent.getOffset(), makeFunctionType(convertToString(ent.getReturnValue()), convertToStringVector(ent.getTypes())));
+            s = ent->convertToString(ent->getReturnValue());
+            vector<string> temp = ent->convertToStringVector(ent->getTypes());
+            printID(ent->getName(), ent->getOffset(), makeFunctionType(s, temp));
         }
         else
         {
-            printID(ent.getName(), ent.getOffset(), convertToString(ent.getTypes()[0]));
+            s = ent->convertToString(ent->getTypes()[0]);
+            printID(ent->getName(), ent->getOffset(), s);
         }
     }
     this->symbolTables.pop_back();
@@ -64,7 +68,7 @@ void Semantic::addSymbol(Node *symbol, string &value)
         errorDef(yylineno, symbol->value);
     }
 
-    this->symbolTables.back().getEntries().emplace_back(TableEntry(symbol->value, symbol->type, value, this->offset.top()));
+    this->symbolTables.back()->getEntries().emplace_back(new TableEntry(symbol->value, symbol->type, value, this->offset.top()));
     this->offset.top()++;
 }
 
@@ -79,13 +83,13 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
             errorDef(yylineno, f->value);
         var_types.push_back(f->type);
     }
-    this->symbolTables.back().getEntries().emplace_back(TableEntry(id->value, var_types, type->type, id->value, 0));
+    this->symbolTables.back()->getEntries().emplace_back(new TableEntry(id->value, var_types, type->type, id->value, 0));
 
     openScope();
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {
-        this->symbolTables.back().getEntries().emplace_back(TableEntry(f->value, f->type, f->value, i));
+        this->symbolTables.back()->getEntries().emplace_back(new TableEntry(f->value, f->type, f->value, i));
         i--;
     }
 
@@ -94,11 +98,11 @@ void Semantic::declareFunction(Type *type, Node *id, Formals *formals)
 
 bool Semantic::isExist(string id)
 {
-    for (Table t : symbolTables)
+    for (Table* t : symbolTables)
     {
-        for (TableEntry ent : t.getEntries())
+        for (TableEntry* ent : t->getEntries())
         {
-            if (ent.getName().compare(id) == 0)
+            if (ent->getName().compare(id) == 0)
             {
                 return true;
             }
@@ -109,13 +113,13 @@ bool Semantic::isExist(string id)
 
 TableEntry *Semantic::getTableEntry(string id)
 {
-    for (Table t : symbolTables)
+    for (Table* t : symbolTables)
     {
-        for (TableEntry ent : t.getEntries())
+        for (TableEntry* ent : t->getEntries())
         {
-            if (ent.getName().compare(id) == 0)
+            if (ent->getName().compare(id) == 0)
             {
-                return &ent;
+                return ent;
             }
         }
     }

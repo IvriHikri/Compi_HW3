@@ -43,7 +43,7 @@ Type::Type(Var_Type v_type)
 // Type ID;
 Statement::Statement(Type *t, Node *symbol)
 {
-    if(sem->isExist(symbol->value))
+    if (sem->isExist(symbol->value))
     {
         errorDef(yylineno, symbol->value);
     }
@@ -55,7 +55,7 @@ Statement::Statement(Type *t, Node *symbol)
 // Type ID = EXP;
 Statement::Statement(Type *t, Node *symbol, Exp *exp)
 {
-    if(sem->isExist(exp->value))
+    if (sem->isExist(exp->value))
     {
         errorDef(yylineno, exp->value);
     }
@@ -180,7 +180,8 @@ Call::Call(Node *symbol)
 
     if (!ent->getTypes().empty())
     {
-        errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
+        vector temp = ent->convertToStringVector(ent->getTypes());
+        errorPrototypeMismatch(yylineno, symbol->value, temp);
     }
 
     sem->setCurrentFunction(symbol->value);
@@ -199,7 +200,8 @@ Call::Call(Node *symbol, Explist *exp_list)
 
     if (ent->getTypes().size() != exp_list->getExpressions().size())
     {
-        errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
+        vector temp = ent->convertToStringVector(ent->getTypes());
+        errorPrototypeMismatch(yylineno, symbol->value, temp);
     }
 
     int index = 0;
@@ -208,7 +210,8 @@ Call::Call(Node *symbol, Explist *exp_list)
     {
         if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))
         {
-            errorPrototypeMismatch(yylineno, symbol->value, convertToStringVector(ent->getTypes()));
+            vector temp = ent->convertToStringVector(ent->getTypes());
+            errorPrototypeMismatch(yylineno, symbol->value, temp);
         }
         index++;
     }
@@ -248,7 +251,7 @@ Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
         // TODO- add here a check if e1 and e3 are in the same type or we can cast them..
         errorMismatch(yylineno);
     }
-    Exp *temp = (e2->value.compare("True") == 0) ? e1 : e3;
+    Exp *temp = (e2->value.compare("true") == 0) ? e1 : e3;
     this->value = temp->value;
     this->type = temp->type;
 }
@@ -265,7 +268,7 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
         this->type = V_INT;
     else
         this->type = V_BYTE;
-
+    std::cout << "first number " << e1->value << " second number " << e2->value << std::endl;
     int num1 = stoi(e1->value);
     int num2 = stoi(e2->value);
     int num3;
@@ -301,19 +304,17 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
         if (n1->value.compare("and") == 0)
         {
             this->bool_value = e1->bool_value && e2->bool_value;
-
+            this->value = e1->value + "&&" + e2->value;
         }
         else if (n1->value.compare("or") == 0)
         {
             this->bool_value = e1->bool_value || e2->bool_value;
-            this->value = e1->value + "&&" + e2->value;
+            this->value = e1->value + "||" + e2->value;
         }
         else
         {
             errorMismatch(yylineno);
-            // error, TODO
         }
-
     }
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
@@ -387,21 +388,28 @@ Exp::Exp(Node *n)
         this->bool_value = false;
         this->type = V_BOOL;
     }
-    else if (n->type == V_INT) // לא יקרה
+    else if (n->type == V_INT)
+    {
         this->type = V_INT;
+        this->value = n->value;
+    }
     else if (n->type == V_STRING)
+    {
+        this->value = n->value;
         this->type = V_STRING;
+    }
 }
 
 // NUM B
 Exp::Exp(Node *n1, Node *n2)
 {
-    if (n1->type != V_INT  || n2->value.compare("b") != 0)
+    if (n1->type != V_INT || n2->value.compare("b") != 0)
         errorMismatch(yylineno);
 
     this->type = V_BYTE;
-    if (stoi(n1->value) >255)
+    if (stoi(n1->value) > 255)
         errorByteTooLarge(yylineno, n1->value);
+
     this->value = n1->value;
 }
 

@@ -2,7 +2,7 @@
 #define CLASSES_H
 
 #include "hw3_output.hpp"
-#include <vector>
+#include <iostream>
 extern int yylineno;
 using namespace output;
 using namespace std;
@@ -19,13 +19,23 @@ enum Var_Type
 
 class Node
 {
-    public:
+public:
     string value;
     Var_Type type;
 
-    Node() {};
-    Node(string token_value) : value(token_value), type(UNDEFINED) {}
-    Node(string token_value, Var_Type type) : value(token_value), type(type) {}
+    Node(){};
+    Node(string token_value) : value()
+    {
+        value = token_value;
+        type = UNDEFINED;
+    }
+    Node(string token_value, Var_Type type) : value(), type()
+    {
+        this->value = token_value;
+        this->type = type;
+        printf("reduced number value : %s\n", token_value);
+        cout << "but I'm getting : " << value << endl;
+    }
 };
 
 #define YYSTYPE Node *
@@ -44,7 +54,7 @@ class Program : public Node
 
 class Statement : public Node
 {
-    public:
+public:
     // Type ID;
     explicit Statement(Type *t, Node *symbol);
 
