@@ -1,8 +1,8 @@
 #include "classes.h"
-
+/* Semantic Checkings*/
 static list<Table *> symbolTables = list<Table *>();
 static stack<int> offset = stack<int>();
-static bool in_while = false;
+static int in_while = 0;
 static string currentFunction = "";
 
 string convertToString(Var_Type t)
@@ -21,6 +21,9 @@ string convertToString(Var_Type t)
         break;
     case V_STRING:
         s = "STRING";
+        break;
+    case V_VOID:
+        s = "VOID";
         break;
     }
     return s;
@@ -104,6 +107,10 @@ void addSymbol(Node *symbol, string &value)
 
 void declareFunction(Type *type, Id *id, Formals *formals)
 {
+    if (symbolTables.empty())
+    {
+        openScope();
+    }
     if (isExist(id->value))
         errorDef(yylineno, id->value);
     vector<Var_Type> var_types;
@@ -168,16 +175,7 @@ bool checkReturnType(Var_Type type)
     return ((ent->getReturnValue() == type) || (ent->getReturnValue() == V_INT && type == V_BYTE));
 }
 
-bool start_while()
-{
-    in_while = true;
-}
-
-bool finish_while()
-{
-    in_while = false;
-}
-
+/* All the classes*/
 /****************************************   TYPE   ****************************************/
 
 Type::Type(Type *t)
@@ -281,18 +279,11 @@ Statement::Statement(Call *call)
 }
 
 // IF/WHILE (EXP) Statement
-Statement::Statement(Node *symbol, Exp *exp, Statement *s)
+Statement::Statement(Exp *exp, Statement *s) /////////////////////////////////
 {
-    //cout << exp->value << endl;
     if (exp->type != V_BOOL)
     {
-        //cout << "fall here" << endl;
-        //cout << "the type  is " << convertToString(exp->type) << endl;
         errorMismatch(yylineno);
-    }
-    if (symbol->value.compare("while") == 0)
-    {
-        start_while();
     }
     if (exp->bool_value)
     {
@@ -331,14 +322,14 @@ Statement::Statement(Node *symbol)
     }
     else if (symbol->value.compare("break") == 0)
     {
-        if (!in_while)
+        if (in_while <= 0)
         {
             errorUnexpectedBreak(yylineno);
         }
     }
     else if (symbol->value.compare("continue") == 0)
     {
-        if (!in_while)
+        if (in_while <= 0)
         {
             errorUnexpectedContinue(yylineno);
         }
@@ -425,7 +416,6 @@ Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
 {
     if (e2->type != V_BOOL || (e1->type != e3->type && !((e1->type == V_BYTE && e3->type == V_INT) || (e1->type == V_INT && e3->type == V_BYTE))))
     {
-        // TODO- add here a check if e1 and e3 are in the same type or we can cast them..
         errorMismatch(yylineno);
     }
     Exp *temp = (e2->value.compare("true") == 0) ? e1 : e3;
@@ -514,10 +504,8 @@ Exp::Exp(Id *id)
     {
         errorUndef(yylineno, id->value);
     }
-    //cout << "type is " << convertToString(ent->getTypes()[0]) << endl;
     this->value = ent->getName();
     this->type = ent->getTypes()[0];
-    //cout << "type is " << convertToString(this->type) << endl;
 }
 
 // TRUE/FALSE/NUM/STRING
@@ -590,4 +578,13 @@ Formals::Formals(FormalsList *f_list)
     this->value = "this is Formals";
     this->declaration = f_list->declaration;
     this->type = UNDEFINED;
+}
+
+void start_while()
+{
+    in_while++;
+}
+void finish_while()
+{
+    in_while--;
 }

@@ -31,12 +31,12 @@
 
 %%
 
-Program :  OPEN_SCOPE Funcs {findMain();closeScope();}
+Program :  Funcs {findMain();closeScope();}
 
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} Statements RBRACE {closeScope();}   
+FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} Statements RBRACE CLOSE_SCOPE  
 
 RetType :Type {$$ = new Type((Type*)$1);}
         |VOID {$$ = new Type(V_VOID);}
@@ -59,13 +59,14 @@ Statement   :LBRACE OPEN_SCOPE Statements RBRACE {closeScope();}
         |Call SC {$$ = new Statement((Call*)$1);}
         |RETURN SC {$$ = new Statement($1);}
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
-        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$4,(Statement*)$6);}
-        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement ELSE {closeScope();} OPEN_SCOPE Statement {$$ = new Statement((Exp*)$4,(Statement*)$6,(Statement*)$10);}
-        |WHILE WHILE_M LPAREN Exp RPAREN Statement {$$ = new Statement($1,(Exp*)$5,(Statement*)$6);}
-        |BREAK SC {$$ = new Statement($1); closeScope();}
+        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement CLOSE_SCOPE {$$ = new Statement((Exp*)$4,(Statement*)$6);}
+        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement CLOSE_SCOPE ELSE OPEN_SCOPE Statement CLOSE_SCOPE {$$ = new Statement((Exp*)$4,(Statement*)$6,(Statement*)$10);}
+        |WHILE WHILE_M_START LPAREN Exp RPAREN Statement WHILE_M_FINISH {$$ = new Statement((Exp*)$4,(Statement*)$6);}
+        |BREAK SC {$$ = new Statement($1);}
         |CONTINUE SC {$$ = new Statement($1);}
 
-WHILE_M : /*epsilon*/ {start_while();}
+WHILE_M_START : /*epsilon*/ {start_while(); openScope();}
+WHILE_M_FINISH: /*epsilon*/ {finish_while(); closeScope();}
 
 Call    :ID LPAREN ExpList RPAREN {$$ = new Call((Id*)$1,(Explist*)$3);}
         |ID LPAREN RPAREN {$$ = new Call((Id*)$1);}
@@ -97,6 +98,7 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ((Exp*)$2);}
 
 
 OPEN_SCOPE : /*epsilon */ {openScope();}
+CLOSE_SCOPE: /*epsilon */ {closeScope();}
 %%
 
 int main()

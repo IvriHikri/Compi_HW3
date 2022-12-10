@@ -79,7 +79,7 @@ public:
     explicit Statement(Call *call);
 
     // IF/WHILE (EXP) then statement;
-    explicit Statement(Node *symbol, Exp *exp, Statement *s);
+    explicit Statement(Exp *exp, Statement *s);
 
     // IF (EXP) then statement else statement;
     explicit Statement(Exp *exp, Statement *s1, Statement *s2);
@@ -236,10 +236,9 @@ void openScope();
 void closeScope();
 void findMain();
 bool checkReturnType(Var_Type type);
-bool start_while();
-bool finish_while();
 string convertToString(Var_Type t);
 vector<string> convertToStringVector(vector<Var_Type> vec);
-
+void start_while();
+void finish_while();
 
 #endif /*CLASSES_H*/
