@@ -285,16 +285,8 @@ Statement::Statement(Exp *exp, Statement *s) /////////////////////////////////
     {
         errorMismatch(yylineno);
     }
-    if (exp->bool_value)
-    {
-        this->type = s->type;
-        this->value = s->value;
-    }
-    else
-    {
-        this->type = Var_Type::UNDEFINED;
-        this->value = "";
-    }
+    this->type = s->type;
+    this->value = s->value;
 }
 
 // IF (EXP) then s1 else s2
@@ -304,10 +296,7 @@ Statement::Statement(Exp *exp, Statement *s1, Statement *s2)
     {
         errorMismatch(yylineno);
     }
-
-    Statement *temp = exp->bool_value ? s1 : s2;
-    this->type = temp->type;
-    this->value = temp->value;
+    this->value = "IF EXP THEN s1 ELSE s2";
 }
 
 // BREAK / CONTINUE
@@ -444,22 +433,15 @@ Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
     this->type = V_BOOL;
     if (e1->type == V_BOOL && e2->type == V_BOOL)
     {
-        if (n1->value.compare("and") == 0)
-        {
-            this->value = e1->value + "&&" + e2->value;
-        }
-        else if (n1->value.compare("or") == 0)
-        {
-            this->value = e1->value + "||" + e2->value;
-        }
-        else
+        if (n1->value.compare("and") != 0 && n1->value.compare("or") != 0)
         {
             errorMismatch(yylineno);
         }
+        this->value = "EXP AND/OR EXP";
     }
     else if ((e1->type == V_INT || e1->type == V_BYTE) && (e2->type == V_INT || e2->type == V_BYTE))
     {
-        this->value = e1->value + " " + n1->value + " " + e2->value;
+        this->value = "EXP RELOP EXP";
     }
     else
     {
@@ -474,7 +456,7 @@ Exp::Exp(Node *n, Exp *e)
         errorMismatch(yylineno);
 
     this->type = V_BOOL;
-    this->bool_value = !e->bool_value;
+    this->value = "NOT EXP";
 }
 
 // (TYPE) EXP
@@ -512,14 +494,8 @@ Exp::Exp(Id *id)
 Exp::Exp(Node *n)
 {
     this->value = n->value;
-    if (n->value.compare("true") == 0)
+    if (n->value.compare("true") == 0 || n->value.compare("false") == 0)
     {
-        this->bool_value = true;
-        this->type = V_BOOL;
-    }
-    else if (n->value.compare("false") == 0)
-    {
-        this->bool_value = false;
         this->type = V_BOOL;
     }
     else if (n->type == V_INT)

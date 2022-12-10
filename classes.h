@@ -112,7 +112,6 @@ public:
 class Exp : public Node
 {
 public:
-    bool bool_value;
 
     // (Exp)
     Exp(Exp *exp);
