@@ -25,9 +25,9 @@ not {yylval = new Node(yytext); return NOT;}
 true {yylval = new Node(yytext, V_BOOL); return TRUE;}
 false {yylval = new Node(yytext, V_BOOL); return FALSE;}
 return {yylval = new Node(yytext); return RETURN;}
-if {yylval = new Node(yytext); return IF;}
-else {yylval = new Node(yytext); return ELSE;}
-while {yylval = new Node(yytext); return WHILE;}
+if {return IF;}
+else {return ELSE;}
+while {return WHILE;}
 break {yylval = new Node(yytext); return BREAK;}
 continue {yylval = new Node(yytext); return CONTINUE;}
 \; {return SC;}
