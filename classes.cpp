@@ -231,7 +231,7 @@ Statement::Statement(Type *t, Id *symbol)
 // Type ID = EXP;
 Statement::Statement(Type *t, Id *symbol, Exp *exp)
 {
-    if (isExist(exp->value))
+    if (isExist(symbol->value))
     {
         errorDef(yylineno, exp->value);
     }
@@ -279,7 +279,7 @@ Statement::Statement(Call *call)
 }
 
 // IF/WHILE (EXP) Statement
-Statement::Statement(Exp *exp, Statement *s) /////////////////////////////////
+Statement::Statement(Exp *exp, Statement *s)
 {
     if (exp->type != V_BOOL)
     {
