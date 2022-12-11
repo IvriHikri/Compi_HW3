@@ -407,9 +407,17 @@ Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
     {
         errorMismatch(yylineno);
     }
-    Exp *temp = (e2->value.compare("true") == 0) ? e1 : e3;
-    this->value = temp->value;
-    this->type = temp->type;
+
+    if (e1->type == e3->type)
+    {
+        this->type = e1->type;
+    }
+    else if ((e1->type == V_BYTE && e3->type == V_INT) || (e1->type == V_INT && e3->type == V_BYTE))
+    {
+        this->type = V_INT;
+    }
+
+    this->value = e1->value + " OR " + e3->value;
 }
 
 // EXP BINOP EXP
