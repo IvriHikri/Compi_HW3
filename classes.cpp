@@ -175,6 +175,14 @@ bool checkReturnType(Var_Type type)
     return ((ent->getReturnValue() == type) || (ent->getReturnValue() == V_INT && type == V_BYTE));
 }
 
+void checkExpBool(Exp *exp)
+{
+    if (exp->type != V_BOOL)
+    {
+        errorMismatch(yylineno);
+    }
+}
+
 /* All the classes*/
 /****************************************   TYPE   ****************************************/
 
@@ -272,20 +280,19 @@ Statement::Statement(Node *symbol, Exp *exp)
     }
 }
 
-// Call
-Statement::Statement(Call *call)
-{
-    this->value = call->value;
-    this->type = call->type;
-}
-
-// IF/WHILE (EXP) Statement
 Statement::Statement(Exp *exp)
 {
     if (exp->type != V_BOOL)
     {
         errorMismatch(yylineno);
     }
+}
+
+// Call
+Statement::Statement(Call *call)
+{
+    this->value = call->value;
+    this->type = call->type;
 }
 
 // RETURN/ BREAK / CONTINUE

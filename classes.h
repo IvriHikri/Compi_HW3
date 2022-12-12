@@ -75,11 +75,11 @@ public:
     // Return Exp;
     explicit Statement(Node *symbol, Exp *exp);
 
+    // WHILE
+    explicit Statement(Exp *exp);
+
     // Call;
     explicit Statement(Call *call);
-
-    // IF/WHILE (EXP) then statement;
-    explicit Statement(Exp *exp);
 
     // BREAK/ CONTINUE/ RETURN
     explicit Statement(Node *symbol);
@@ -109,7 +109,6 @@ public:
 class Exp : public Node
 {
 public:
-
     // (Exp)
     Exp(Exp *exp);
 
@@ -236,5 +235,5 @@ string convertToString(Var_Type t);
 vector<string> convertToStringVector(vector<Var_Type> vec);
 void start_while();
 void finish_while();
-
+void checkExpBool(Exp *exp);
 #endif /*CLASSES_H*/

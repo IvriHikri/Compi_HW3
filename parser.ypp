@@ -59,11 +59,13 @@ Statement   :LBRACE OPEN_SCOPE Statements CLOSE_SCOPE RBRACE
         |Call SC {$$ = new Statement((Call*)$1);}
         |RETURN SC {$$ = new Statement($1);}
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
-        |IF LPAREN Exp RPAREN OPEN_SCOPE Statement {$$ = new Statement((Exp*)$3); closeScope();}
-        |IF LPAREN Exp RPAREN OPEN_SCOPE Statement ELSE {$$ = new Statement((Exp*)$3); closeScope();} OPEN_SCOPE Statement CLOSE_SCOPE
-        |WHILE LPAREN Exp RPAREN {$$ = new Statement((Exp*)$3);} WHILE_M_START Statement WHILE_M_FINISH 
+        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE {}
+        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE ELSE  OPEN_SCOPE Statement CLOSE_SCOPE {}
+        |WHILE LPAREN Exp RPAREN {$$ = new Statement((Exp*)$3);} WHILE_M_START Statement WHILE_M_FINISH {}
         |BREAK SC {$$ = new Statement($1);}
         |CONTINUE SC {$$ = new Statement($1);}
+
+IS_EXP_BOOL : Exp {checkExpBool((Exp*)$1);}
 
 WHILE_M_START : /*epsilon*/ {start_while(); openScope();}
 WHILE_M_FINISH: /*epsilon*/ {finish_while(); closeScope();}
