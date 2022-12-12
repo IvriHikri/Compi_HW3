@@ -280,14 +280,6 @@ Statement::Statement(Node *symbol, Exp *exp)
     }
 }
 
-Statement::Statement(Exp *exp)
-{
-    if (exp->type != V_BOOL)
-    {
-        errorMismatch(yylineno);
-    }
-}
-
 // Call
 Statement::Statement(Call *call)
 {

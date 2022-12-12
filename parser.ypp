@@ -61,7 +61,7 @@ Statement   :LBRACE OPEN_SCOPE Statements CLOSE_SCOPE RBRACE
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
         |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE {}
         |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE ELSE  OPEN_SCOPE Statement CLOSE_SCOPE {}
-        |WHILE LPAREN Exp RPAREN {$$ = new Statement((Exp*)$3);} WHILE_M_START Statement WHILE_M_FINISH {}
+        |WHILE LPAREN IS_EXP_BOOL RPAREN WHILE_M_START Statement WHILE_M_FINISH {}
         |BREAK SC {$$ = new Statement($1);}
         |CONTINUE SC {$$ = new Statement($1);}
 

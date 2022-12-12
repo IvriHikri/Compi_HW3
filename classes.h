@@ -75,9 +75,6 @@ public:
     // Return Exp;
     explicit Statement(Node *symbol, Exp *exp);
 
-    // WHILE
-    explicit Statement(Exp *exp);
-
     // Call;
     explicit Statement(Call *call);
 
