@@ -36,7 +36,7 @@ Program :  Funcs {findMain();closeScope();}
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN LBRACE {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} Statements RBRACE CLOSE_SCOPE  
+FuncDecl:RetType ID LPAREN Formals RPAREN {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} LBRACE Statements RBRACE CLOSE_SCOPE  
 
 RetType :Type {$$ = new Type((Type*)$1);}
         |VOID {$$ = new Type(V_VOID);}
@@ -52,16 +52,16 @@ FormalDecl  :Type ID {$$ = new FormalDecl((Type*)$1, (Id*)$2);}
 Statements  :Statement
             |Statements Statement
 
-Statement   :LBRACE OPEN_SCOPE Statements RBRACE {closeScope();}
+Statement   :LBRACE OPEN_SCOPE Statements CLOSE_SCOPE RBRACE
         |Type ID SC {$$ = new Statement((Type*)$1,(Id*)$2);}
         |Type ID ASSIGN Exp SC {$$ = new Statement((Type*)$1,(Id*)$2,(Exp*)$4);}
         |ID ASSIGN Exp SC {$$ = new Statement((Id*)$1,(Exp*)$3);}
         |Call SC {$$ = new Statement((Call*)$1);}
         |RETURN SC {$$ = new Statement($1);}
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
-        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement CLOSE_SCOPE {$$ = new Statement((Exp*)$4,(Statement*)$6);}
-        |IF OPEN_SCOPE LPAREN Exp RPAREN Statement CLOSE_SCOPE ELSE OPEN_SCOPE Statement CLOSE_SCOPE {$$ = new Statement((Exp*)$4,(Statement*)$6,(Statement*)$10);}
-        |WHILE WHILE_M_START LPAREN Exp RPAREN Statement WHILE_M_FINISH {$$ = new Statement((Exp*)$4,(Statement*)$6);}
+        |IF LPAREN Exp RPAREN OPEN_SCOPE Statement {$$ = new Statement((Exp*)$3); closeScope();}
+        |IF LPAREN Exp RPAREN OPEN_SCOPE Statement ELSE {$$ = new Statement((Exp*)$3); closeScope();} OPEN_SCOPE Statement CLOSE_SCOPE
+        |WHILE LPAREN Exp RPAREN {$$ = new Statement((Exp*)$3);} WHILE_M_START Statement WHILE_M_FINISH 
         |BREAK SC {$$ = new Statement($1);}
         |CONTINUE SC {$$ = new Statement($1);}
 

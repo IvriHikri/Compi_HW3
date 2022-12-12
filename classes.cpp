@@ -233,7 +233,7 @@ Statement::Statement(Type *t, Id *symbol, Exp *exp)
 {
     if (isExist(symbol->value))
     {
-        errorDef(yylineno, exp->value);
+        errorDef(yylineno, symbol->value);
     }
     if (t->type != exp->type && !(t->type == V_INT && exp->type == V_BYTE))
     {
@@ -264,7 +264,8 @@ Statement::Statement(Node *symbol, Exp *exp)
 {
     if (symbol->value.compare("return") == 0)
     {
-        if (!checkReturnType(exp->type))
+        TableEntry *ent = getTableEntry(currentFunction);
+        if (ent->getReturnValue() == V_VOID || !checkReturnType(exp->type))
         {
             errorMismatch(yylineno);
         }
@@ -279,27 +280,15 @@ Statement::Statement(Call *call)
 }
 
 // IF/WHILE (EXP) Statement
-Statement::Statement(Exp *exp, Statement *s)
+Statement::Statement(Exp *exp)
 {
     if (exp->type != V_BOOL)
     {
         errorMismatch(yylineno);
     }
-    this->type = s->type;
-    this->value = s->value;
 }
 
-// IF (EXP) then s1 else s2
-Statement::Statement(Exp *exp, Statement *s1, Statement *s2)
-{
-    if (exp->type != V_BOOL)
-    {
-        errorMismatch(yylineno);
-    }
-    this->value = "IF EXP THEN s1 ELSE s2";
-}
-
-// BREAK / CONTINUE
+// RETURN/ BREAK / CONTINUE
 Statement::Statement(Node *symbol)
 {
     if (symbol->value.compare("return") == 0)

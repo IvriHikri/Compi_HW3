@@ -79,10 +79,7 @@ public:
     explicit Statement(Call *call);
 
     // IF/WHILE (EXP) then statement;
-    explicit Statement(Exp *exp, Statement *s);
-
-    // IF (EXP) then statement else statement;
-    explicit Statement(Exp *exp, Statement *s1, Statement *s2);
+    explicit Statement(Exp *exp);
 
     // BREAK/ CONTINUE/ RETURN
     explicit Statement(Node *symbol);
