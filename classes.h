@@ -226,6 +226,7 @@ bool isExist(string id);
 TableEntry *getTableEntry(string id);
 void openScope();
 void closeScope();
+void closeGlobalScope();
 void findMain();
 bool checkReturnType(Var_Type type);
 string convertToString(Var_Type t);

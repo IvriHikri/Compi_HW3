@@ -14,7 +14,7 @@
 %}
 
 %nonassoc VOID INT BYTE B BOOL
-%left ID NUM STRING
+%nonassoc ID NUM STRING
 %right ASSIGN
 %left OR
 %left AND
@@ -31,9 +31,9 @@
 
 %%
 
-Program :  Funcs {findMain();closeScope();}
+Program :  Funcs
 
-Funcs   :/* Epsilon */
+Funcs   :/* Epsilon */ 
         |FuncDecl Funcs
 
 FuncDecl:RetType ID LPAREN Formals RPAREN {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} LBRACE Statements RBRACE {setCurrFunction(); closeScope();} 
@@ -105,7 +105,10 @@ CLOSE_SCOPE: /*epsilon */ {closeScope();}
 
 int main()
 {
-        yyparse();
+        openScope();
+        int result = yyparse();
+        closeGlobalScope();
+        return result;
 }
 
 int yyerror(const char * message)

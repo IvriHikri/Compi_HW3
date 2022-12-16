@@ -93,6 +93,12 @@ void closeScope()
     offset.pop();
 }
 
+void closeGlobalScope()
+{
+    findMain();
+    closeScope();
+}
+
 void addSymbol(Node *symbol, string &value)
 {
     if (isExist(symbol->value))
@@ -110,21 +116,28 @@ void declareFunction(Type *type, Id *id, Formals *formals)
     {
         openScope();
     }
-    if (isExist(id->value))
-        errorDef(yylineno, id->value);
-    vector<Var_Type> var_types;
-    for (FormalDecl *f : formals->declaration)
+
+    if (isExist(id->value)) // check if Function identifier already exist
     {
-        if (isExist(f->value))
-            errorDef(yylineno, f->value);
+        errorDef(yylineno, id->value);
+    }
+
+    vector<Var_Type> var_types;
+    for (FormalDecl *f : formals->declaration) // create types vector from function parameters
+    {
         var_types.push_back(f->type);
     }
+
     symbolTables.back()->getEntries().emplace_back(new TableEntry(id->value, var_types, type->type, 0));
 
     openScope();
     int i = -1;
     for (FormalDecl *f : formals->declaration)
     {
+        if (isExist(f->value))
+        {
+            errorDef(yylineno, f->value);
+        }
         symbolTables.back()->getEntries().emplace_back(new TableEntry(f->value, f->type, i));
         i--;
     }
@@ -341,7 +354,7 @@ Call::Call(Id *symbol)
     this->type = ent->getReturnValue();
 }
 
-Call::Call(Id *symbol, Explist *exp_list)
+Call::Call(Id *symbol, Explist *exp_list) // printi(func) EXP->CALL --- CALL -> ID(EXP) --- EXP->ID
 {
     TableEntry *ent = getTableEntry(symbol->value);
     if (ent == nullptr || !ent->getIsFunc())
@@ -356,7 +369,7 @@ Call::Call(Id *symbol, Explist *exp_list)
     }
 
     int index = 0;
-    vector temp = exp_list->getExpressions();
+    vector<Exp *> temp = exp_list->getExpressions();
     for (Var_Type t : ent->getTypes())
     {
         if (t != temp[index]->type && !(t == V_INT && temp[index]->type == V_BYTE))
@@ -397,6 +410,10 @@ Exp::Exp(Exp *e1, Exp *e2, Exp *e3)
 {
     if (e2->type != V_BOOL || (e1->type != e3->type && !((e1->type == V_BYTE && e3->type == V_INT) || (e1->type == V_INT && e3->type == V_BYTE))))
     {
+       /* cout << "e1 type: " << convertToString(e1->type) << " e2 type: " << convertToString(e2->type) << " e3 type " << convertToString(e3->type) << endl;
+        cout << "e1 is " << e1->value << endl;
+        cout << "e2 is " << e2->value << endl;
+        cout << "e3 is " << e3->value << endl;*/
         errorMismatch(yylineno);
     }
 
@@ -430,6 +447,7 @@ Exp::Exp(Exp *e1, Node *n, Exp *e2)
 // EXP AND/OR/RELOP EXP
 Exp::Exp(Var_Type type, Exp *e1, Node *n1, Exp *e2)
 {
+    //cout << e1->value << " " << n1->value << " " << e2->value << endl;
     this->type = V_BOOL;
     if (e1->type == V_BOOL && e2->type == V_BOOL)
     {
@@ -481,8 +499,9 @@ Exp::Exp(Call *c)
 // ID
 Exp::Exp(Id *id)
 {
+    //cout << "im here with id: " << id->value << endl;
     TableEntry *ent = getTableEntry(id->value);
-    if (ent == nullptr)
+    if (ent == nullptr || ent->getIsFunc())
     {
         errorUndef(yylineno, id->value);
     }

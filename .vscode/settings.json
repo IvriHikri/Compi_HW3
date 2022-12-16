@@ -12,6 +12,7 @@
         "functional": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "iostream": "cpp"
     }
 }
