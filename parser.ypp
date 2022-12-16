@@ -75,7 +75,7 @@ Type    :INT {$$ = new Type(V_INT);}
         |BOOL {$$ = new Type(V_BOOL);}
 
 Exp :LPAREN Exp RPAREN {$$ = new Exp ((Exp*)$2);}
-    |Exp IF LPAREN Exp RPAREN ELSE Exp {$$ = new Exp ((Exp*)$1, (Exp*)$4, (Exp*)$7);}
+    |Exp IF LPAREN Exp RPAREN ELSE Exp {$$ = new Exp ((Exp*)$1, (Exp*)$4, (Exp*)$7);} %prec IF
     |Exp BINOP Exp {$$ = new Exp ((Exp*)$1, $2, (Exp*)$3);}
     |Exp BINOP_MUL_DIV Exp {$$ = new Exp ((Exp*)$1, $2, (Exp*)$3);}
     |ID {$$ = new Exp ((Id*)$1);}
@@ -90,7 +90,7 @@ Exp :LPAREN Exp RPAREN {$$ = new Exp ((Exp*)$2);}
     |Exp OR Exp {$$ = new Exp(V_BOOL, (Exp*)$1, $2, (Exp*)$3);}
     |Exp RELOP Exp {$$ = new Exp (V_BOOL, (Exp*)$1, $2, (Exp*)$3);}
     |Exp RELOP_EQ Exp {$$ = new Exp (V_BOOL, (Exp*)$1, $2, (Exp*)$3);}
-    |LPAREN Type RPAREN Exp {$$ = new Exp ((Type*)$2,(Exp*)$4);} 
+    |LPAREN Type RPAREN Exp {$$ = new Exp ((Type*)$2,(Exp*)$4);}
 
 
 OPEN_SCOPE : /*epsilon */ {openScope();}
