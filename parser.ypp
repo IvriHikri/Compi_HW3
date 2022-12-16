@@ -36,7 +36,7 @@ Program :  Funcs {findMain();closeScope();}
 Funcs   :/* Epsilon */
         |FuncDecl Funcs
 
-FuncDecl:RetType ID LPAREN Formals RPAREN {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} LBRACE Statements RBRACE CLOSE_SCOPE  
+FuncDecl:RetType ID LPAREN Formals RPAREN {declareFunction((Type*)$1, (Id*)$2, (Formals*)$4);} LBRACE Statements RBRACE {setCurrFunction(); closeScope();} 
 
 RetType :Type {$$ = new Type((Type*)$1);}
         |VOID {$$ = new Type(V_VOID);}

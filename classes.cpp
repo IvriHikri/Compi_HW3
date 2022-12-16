@@ -91,7 +91,6 @@ void closeScope()
     }
     symbolTables.pop_back();
     offset.pop();
-    currentFunction = "";
 }
 
 void addSymbol(Node *symbol, string &value)
@@ -181,6 +180,11 @@ void checkExpBool(Exp *exp)
     {
         errorMismatch(yylineno);
     }
+}
+
+void setCurrFunction(string newFunc)
+{
+    currentFunction = newFunc;
 }
 
 /* All the classes*/

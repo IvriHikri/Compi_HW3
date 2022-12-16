@@ -233,4 +233,5 @@ vector<string> convertToStringVector(vector<Var_Type> vec);
 void start_while();
 void finish_while();
 void checkExpBool(Exp *exp);
+void setCurrFunction(string newFunc = "");
 #endif /*CLASSES_H*/
