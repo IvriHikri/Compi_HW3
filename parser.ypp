@@ -25,7 +25,7 @@
 
 %%
 
-Program :  Funcs
+Program :  Funcs {if(yychar==YYEOF) {closeGlobalScope();} else {errorSyn(yylineno);}}
 
 Funcs   :/* Epsilon */ 
         |FuncDecl Funcs
@@ -53,8 +53,8 @@ Statement   :LBRACE OPEN_SCOPE Statements CLOSE_SCOPE RBRACE
         |Call SC {$$ = new Statement((Call*)$1);}
         |RETURN SC {$$ = new Statement($1);}
         |RETURN Exp SC {$$ = new Statement($1,(Exp*)$2);}
-        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE {}
-        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE ELSE  OPEN_SCOPE Statement CLOSE_SCOPE {}
+        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE {} %prec IF
+        |IF LPAREN IS_EXP_BOOL RPAREN OPEN_SCOPE Statement CLOSE_SCOPE ELSE  OPEN_SCOPE Statement CLOSE_SCOPE {} %prec IF 
         |WHILE LPAREN IS_EXP_BOOL RPAREN WHILE_M_START Statement WHILE_M_FINISH {}
         |BREAK SC {$$ = new Statement($1);}
         |CONTINUE SC {$$ = new Statement($1);}
@@ -101,7 +101,6 @@ int main()
 {
         openScope();
         int result = yyparse();
-        closeGlobalScope();
         return result;
 }
 
